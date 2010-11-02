@@ -33,7 +33,7 @@
 
 //UART
 #define UART_BAUD_RATE			115200	/* Baud Rate */
-#define UART_BUF_SIZE			300
+#define UART_BUF_SIZE			50
 
 //PIO
 #define PIO_FIQ
