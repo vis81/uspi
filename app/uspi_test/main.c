@@ -44,12 +44,13 @@ int main(int argc,char** argv)
     unsigned hsize=4;
     unsigned dsize=1;
     unsigned time=20;
+    unsigned count=0;
     unsigned loops=1;
     unsigned adcnum=1;
     unsigned scbr=1;
     unsigned arg=1;
     char bSpckInactiveHigh=0;
-    char bSpckCaptureRising=0;
+    char bSpckCaptureRising=1;
 
     while(arg<argc)
     {
@@ -107,7 +108,8 @@ int main(int argc,char** argv)
             arg++;
             continue;
         }
-        else if(!strcmp(argv[arg],"-edge"))
+        else
+        if(!strcmp(argv[arg],"-edge"))
         {
             arg++;
             if(!strcmp(argv[arg],"rising"))
@@ -116,7 +118,15 @@ int main(int argc,char** argv)
                 bSpckCaptureRising=0;
             arg++;
             continue;
-        }else{
+        }else
+        if(!strcmp(argv[arg],"-count"))
+        {
+            arg++;
+            count=atoi(argv[arg]);
+            arg++;
+            continue;
+        }else
+        {
             usage();
             return 1;
         }
@@ -138,8 +148,6 @@ int main(int argc,char** argv)
         printf("Free MIPS in idle: %2u.%u%%\n",ret/10,ret%10);
 
     uspi_setspi(dev,FALSE,FALSE,bSpckCaptureRising,scbr,1,0);
-    //uspi_setspi(dev,TRUE,TRUE,TRUE,1,0,0);
-    //uspi_setspi(dev,TRUE,TRUE,TRUE,3,0,0);
     for(loop=0;loop<loops;loop++)
     {
         char filename[10];
@@ -154,16 +162,17 @@ int main(int argc,char** argv)
         printf("  SENT         USB      TMR      SPI  MIPS\n");
         //ret=uspi_settimer(dev,freq);
 
-        ret=uspi_start(dev,spi,drdy,adcnum,hsize,dsize,f,1024*64);
-        //ret=uspi_start(dev,freq,hsize,adcnum,f,640);
-        t1=clock();
-        for(i=0;i<time*10;i++)
-        {
-            _sleep(95);
-            ret=uspi_getstat(dev,&stat);
-            ret=uspi_getmips(dev);
-            if(ret)
-             printf("%8u %8u %8u %8u   %2u.%u%%\n",stat.PktSent,stat.UsbOvflw,stat.TmrMissCnt,stat.SpiOverRun,ret/10,ret%10);
+        ret=uspi_start(dev,spi,drdy,adcnum,hsize,count,f,1024*64);
+        if(!count){
+            t1=clock();
+            for(i=0;i<time*10;i++)
+            {
+                _sleep(95);
+                ret=uspi_getstat(dev,&stat);
+                ret=uspi_getmips(dev);
+                if(ret)
+                 printf("%8u %8u %8u %8u   %2u.%u%%\n",stat.PktSent,stat.UsbOvflw,stat.TmrMissCnt,stat.SpiOverRun,ret/10,ret%10);
+            }
         }
         ret=uspi_stop(dev);
         t2=clock();

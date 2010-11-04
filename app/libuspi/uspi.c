@@ -14,6 +14,7 @@ typedef struct _uspi_thread_params{
     uspi_handle* dev;
     FILE* f;
     unsigned bufsize;
+    unsigned totalsize;
 }uspi_thread_params;
 
 HANDLE hThread;
@@ -134,6 +135,13 @@ void uspi_thread(uspi_thread_params* up)
         ret=usb_bulk_read((usb_dev_handle*)up->dev, 0x81,pbuf,up->bufsize, 10000);
         if(ret>0){
             total+=ret;
+            if(up->totalsize)
+                if(total>up->totalsize)
+                {
+                    fwrite(pbuf,ret-(total-up->totalsize),1,up->f);
+                    break;
+                }
+
             fwrite(pbuf,ret,1,up->f);
         }
     }while(ret==up->bufsize);
@@ -148,7 +156,7 @@ int uspi_start(uspi_handle* dev,
                 unsigned drdy,
                 unsigned adcnum,
                 unsigned hsize,
-                unsigned dsize,
+                unsigned count,
                 FILE* file,
                 unsigned bufsize)
 {
@@ -159,9 +167,9 @@ int uspi_start(uspi_handle* dev,
     tmp[1]=drdy;
     tmp[2]=adcnum;
     tmp[3]=hsize;
-    tmp[4]=dsize;
+    //tmp[4]=dsize;
 
-    usb_resetep((usb_dev_handle*)dev, 0x81);
+    //usb_resetep((usb_dev_handle*)dev, 0x81);//doesn't work
 
     ret=usb_control_msg((usb_dev_handle*)dev, USB_TYPE_VENDOR, CMD_START, 0, 0, tmp,5, 1000);
     if(ret!= 5)
@@ -170,8 +178,13 @@ int uspi_start(uspi_handle* dev,
     up.dev=dev;
     up.f=file;
     up.bufsize=bufsize;
+    up.totalsize=count*(hsize+9);
+    if(count)
+        up.bufsize=64;
+
     hThread=_beginthread(uspi_thread, 0,&up);
-    //WaitForSingleObject( hThread, INFINITE );
+    if(count)
+        WaitForSingleObject( hThread, INFINITE );
     return 0;
 }
 
