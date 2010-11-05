@@ -523,8 +523,16 @@ void usbisr_enable_ep (EP_DESC* pEpDesc,BOOL Enable) {
 U32 usbisr_reset_ep (EP_DESC* pEpDesc)
 {
 
+	if(*pEpDesc->UDP_CSR&AT91C_UDP_TXPKTRDY)
+	{
+		CLEAR_CSR(pEpDesc->UDP_CSR,AT91C_UDP_TXPKTRDY);
+		while(*pEpDesc->UDP_CSR&AT91C_UDP_TXPKTRDY);
+		SET_CSR(pEpDesc->UDP_CSR,AT91C_UDP_TXPKTRDY);
+		while(!(*pEpDesc->UDP_CSR&AT91C_UDP_TXPKTRDY));
+		CLEAR_CSR(pEpDesc->UDP_CSR,AT91C_UDP_TXPKTRDY);
+		while(*pEpDesc->UDP_CSR&AT91C_UDP_TXPKTRDY);
+	}
 	gUsbDesc.pUDP->UDP_RSTEP  |=   (1 << pEpDesc->EpId);
-	CLEAR_CSR(pEpDesc->UDP_CSR,AT91C_UDP_TXPKTRDY);
 	gUsbDesc.pUDP->UDP_RSTEP  &= ~(1 << pEpDesc->EpId);
 		
 	pEpDesc->pWData=pEpDesc->pWBuffer;

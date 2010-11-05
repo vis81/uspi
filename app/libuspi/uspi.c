@@ -169,7 +169,7 @@ int uspi_start(uspi_handle* dev,
     tmp[3]=hsize;
     //tmp[4]=dsize;
 
-    //usb_resetep((usb_dev_handle*)dev, 0x81);//doesn't work
+    usb_resetep((usb_dev_handle*)dev, 0x81);
 
     ret=usb_control_msg((usb_dev_handle*)dev, USB_TYPE_VENDOR, CMD_START, 0, 0, tmp,5, 1000);
     if(ret!= 5)
