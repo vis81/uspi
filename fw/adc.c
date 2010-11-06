@@ -123,7 +123,6 @@ void adc_stop(void)
 	gAdcDesc.cb=NULL;
 	gAdcDesc.state=ADC_IDLE;
 #ifdef DEBUG
-	//tm_stop();
 	pwm_stop();
 #endif
 }
