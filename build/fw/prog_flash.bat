@@ -1,0 +1,1 @@
+sam-ba.exe  \jlink\ARM0 AT91SAM7S64-EK prog_flash.tcl > log.txt 2>&1
