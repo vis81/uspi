@@ -121,7 +121,8 @@ void spi_setup_xfer(U8 Spi, U8 xfersize, SPI_DONE_CB cb)
 	gSpiDesc.SpiID=Spi;
 	gSpiDesc.XferSize=xfersize;
 
-#ifndef DEBUG
+//#ifndef DEBUG
+#if 1
 	//setup PIO pins as peripheral
 	pio_set_peripheral(AT91C_PA12_MISO|AT91C_PA14_SPCK|nCS_mask[Spi],0,FALSE);
 	//set outputs	

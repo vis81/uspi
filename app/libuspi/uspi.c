@@ -180,7 +180,7 @@ int uspi_start(uspi_handle* dev,
     up.bufsize=bufsize;
     up.totalsize=count*(hsize+9);
     if(count)
-        up.bufsize=64;
+        up.bufsize=(count*(hsize+9)+64)/64*64;
 
     hThread=_beginthread(uspi_thread, 0,&up);
     if(count)

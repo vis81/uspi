@@ -1,22 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <usb.h>
 #include <time.h>
 #include <unistd.h>
 
 #include "uspi.h"
 
-#include "../../FW/commands.h"
 #define BUF_SIZE 10*1024
 
-//#define MY_VID 0x1366
-//#define MY_PID 0x0101
-
-
-
-#define EP_IN1 0x81
-#define EP_IN2 0x82
-#define EP_OUT 0x03
 
 #define TIME 10
 
@@ -147,7 +137,7 @@ int main(int argc,char** argv)
     if(ret)
         printf("Free MIPS in idle: %2u.%u%%\n",ret/10,ret%10);
 
-    uspi_setspi(dev,FALSE,FALSE,bSpckCaptureRising,scbr,1,0);
+    uspi_setspi(dev,0,0,bSpckCaptureRising,scbr,1,0);
     for(loop=0;loop<loops;loop++)
     {
         char filename[10];
