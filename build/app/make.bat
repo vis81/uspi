@@ -17,6 +17,8 @@ cd ..\uspi_test
 call make.bat
 cd ..\uspi_check
 call make.bat
+cd ..\uspi_conv
+call make.bat
 
 cd ..
 copy test.bat ..\..\out\bin
