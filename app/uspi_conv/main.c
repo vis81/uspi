@@ -21,7 +21,7 @@ typedef struct {
 
 typedef struct {
     unsigned int timestamp;
-    char data[9];
+    char data[3][3];
 } uspi_block;
 
 FILE *infile=NULL;
@@ -114,7 +114,14 @@ int main(int argc, char** argv)
     fseek(outfile,sizeof(wave_header),SEEK_SET);
     while(fread(&uspi_data,13,1,infile)==1)
     {
-        fwrite(uspi_data.data,9,1,outfile);
+        unsigned char data[3][3],i;
+        for(i=0;i<3;i++)
+        {
+            data[i][0]=uspi_data.data[i][2];
+            data[i][1]=uspi_data.data[i][1];
+            data[i][2]=uspi_data.data[i][0];
+        }
+        fwrite(data,9,1,outfile);
         sample_count++;
     }
     fseek(outfile,0,SEEK_SET);
