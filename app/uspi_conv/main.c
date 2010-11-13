@@ -25,7 +25,8 @@ typedef struct {
 } uspi_block;
 
 FILE *infile=NULL;
-FILE *outfile=NULL;
+FILE *outfile[3]={NULL,NULL,NULL};
+int split=0;
 uspi_block uspi_data;
 
 wave_header wheader={
@@ -47,12 +48,17 @@ wave_header wheader={
 //Print usage information
 void usage()
 {
-    printf("Usage: uspi_conv -i input_filename -o output_filename\n");
+    printf("Usage: uspi_conv -i input_filename [-split]\n");
+    printf(" -split - splits output to 3 mono wav files\n");
 }
 
 void parse(int argc, char** argv)
 {
-    int arg=1;
+    int arg=1,i;
+    char* outfilename=NULL;
+    char* infilename=NULL;
+    char infilebuf[100],outfilebuf[100];
+    char* pos;
 
     if(argc==1)
     {
@@ -70,25 +76,12 @@ void parse(int argc, char** argv)
         if(!strcmp(argv[arg],"-i"))
         {
             arg++;
-            infile=fopen(argv[arg],"rb");
-            if(!infile)
-            {
-                printf("Can't open %s for reading\n",argv[arg]);
-                exit(1);
-            }
-            printf("Input file: %s\n",argv[arg]);
+            infilename=argv[arg];
             arg++;
         }else
-        if(!strcmp(argv[arg],"-o"))
+        if(!strcmp(argv[arg],"-split"))
         {
-            arg++;
-            outfile=fopen(argv[arg],"wb");
-            if(!outfile)
-            {
-                printf("Can't open %s for writing\n",argv[arg]);
-                exit(1);
-            }
-            printf("Output file: %s\n",argv[arg]);
+            split=1;
             arg++;
         }else
         {
@@ -96,38 +89,85 @@ void parse(int argc, char** argv)
             exit(1);
         }
     }
-    if(!infile){
-        printf("Please specify input file\n");
-        exit(1);
-    }
-    if(!outfile){
-        printf("Please specify output file\n");
-        exit(1);
-    }
 
+    infile=fopen(infilename,"rb");
+    if(!infile)
+    {
+        printf("Can't open %s for reading\n",infilename);
+        exit(1);
+    }
+    printf("Input file: %s\n",infilename);
+
+    pos=strchr(infilename,'.');
+    if(!pos)
+        pos=infilename+strlen(infilename);
+
+    strncpy(infilebuf,infilename,pos-infilename);
+    infilebuf[pos-infilename]=0;
+
+    if(split)
+    {
+        for(i=0;i<3;i++)
+        {
+            sprintf(outfilebuf,"%s_ch%u.wav",infilebuf,i);
+            printf("Output file: %s\n",outfilebuf);
+            outfile[i]=fopen(outfilebuf,"wb");
+            if(!outfile[i])
+            {
+                printf("Can't open %s for writing\n",outfilebuf);
+                exit(1);
+            }
+        }
+    }else{
+        sprintf(outfilebuf,"%s.wav",infilebuf);
+        printf("Output file: %s\n",outfilebuf);
+        outfile[0]=fopen(outfilebuf,"wb");
+        if(!outfile[0])
+        {
+            printf("Can't open %s for writing\n",outfilebuf);
+            exit(1);
+        }
+    }
 }
 
 int main(int argc, char** argv)
 {
     unsigned sample_count=0;
+    unsigned i;
     parse(argc,argv);
-    fseek(outfile,sizeof(wave_header),SEEK_SET);
+
+    for(i=0;i<(split?3:1);i++)
+        fseek(outfile[i],sizeof(wave_header),SEEK_SET);
+
     while(fread(&uspi_data,13,1,infile)==1)
     {
-        unsigned char data[3][3],i;
+        unsigned char data[3][3];
         for(i=0;i<3;i++)
         {
             data[i][0]=uspi_data.data[i][2];
             data[i][1]=uspi_data.data[i][1];
             data[i][2]=uspi_data.data[i][0];
+            fwrite(data[i],3,1,outfile[(split?i:0)]);
         }
-        fwrite(data,9,1,outfile);
         sample_count++;
     }
-    fseek(outfile,0,SEEK_SET);
-
-    wheader.Subchunk2Size=sample_count*3*3;
-    wheader.RiffSize=wheader.Subchunk2Size+36;
-    fwrite(&wheader,sizeof(wave_header),1,outfile);
+    for(i=0;i<(split?3:1);i++)
+    {
+        fseek(outfile[i],0,SEEK_SET);
+        if(!split){
+            wheader.Subchunk2Size=sample_count*3*3;
+            wheader.RiffSize=wheader.Subchunk2Size+36;
+            wheader.nChannels=3;
+            wheader.nAvgBytesPerSec=32000*3*3;
+            wheader.nBlockAlign=3;
+        }else{
+            wheader.Subchunk2Size=sample_count*3;
+            wheader.RiffSize=wheader.Subchunk2Size+36;
+            wheader.nChannels=1;
+            wheader.nAvgBytesPerSec=32000*3;
+            wheader.nBlockAlign=3*3;
+        }
+        fwrite(&wheader,sizeof(wave_header),1,outfile[i]);
+    }
     return 0;
 }
