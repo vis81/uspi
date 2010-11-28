@@ -151,7 +151,7 @@ int main(int argc, char** argv)
         }
         sample_count++;
     }
-    for(i=0;i<(split?3:1);i++)
+    for(i=0;i<(split:1);i++)
     {
         fseek(outfile[i],0,SEEK_SET);
         if(!split){
@@ -159,15 +159,17 @@ int main(int argc, char** argv)
             wheader.RiffSize=wheader.Subchunk2Size+36;
             wheader.nChannels=3;
             wheader.nAvgBytesPerSec=32000*3*3;
-            wheader.nBlockAlign=3;
+            wheader.nBlockAlign=3*3;
+            fwrite(&wheader,sizeof(wave_header),1,outfile[i]);
+            break;
         }else{
             wheader.Subchunk2Size=sample_count*3;
             wheader.RiffSize=wheader.Subchunk2Size+36;
             wheader.nChannels=1;
             wheader.nAvgBytesPerSec=32000*3;
-            wheader.nBlockAlign=3*3;
+            wheader.nBlockAlign=3;
+            fwrite(&wheader,sizeof(wave_header),1,outfile[i]);
         }
-        fwrite(&wheader,sizeof(wave_header),1,outfile[i]);
     }
     return 0;
 }
