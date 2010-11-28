@@ -14,7 +14,7 @@ CHAN_DESC gUspiChannelDesc;
 
 void chan_adc_cb(U32 event,U8* data);
 
-int chan_start(U8 spi,U8 drdy,U8 adcnum,U8 hsize,U8 dsize)
+int chan_start(U8 spi,U8 drdy,U8 adcnum,U8 hsize)
 {
 	if(gUspiChannelDesc.started)
 		chan_stop();
@@ -25,7 +25,6 @@ int chan_start(U8 spi,U8 drdy,U8 adcnum,U8 hsize,U8 dsize)
 	usb_reset_ep(gUspiChannelDesc.pEpDesc);
 	gUspiChannelDesc.started=TRUE;
 	gUspiChannelDesc.hsize=hsize;
-	gUspiChannelDesc.dsize=dsize;
 	gUspiChannelDesc.adcnum=adcnum;
 	gUspiChannelDesc.drdy=drdy;
 	gUspiChannelDesc.spi=spi;

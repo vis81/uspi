@@ -20,7 +20,6 @@ typedef struct _CHAN_STAT {
 	unsigned int PktSent;
 	unsigned int UsbOvflw;
 	unsigned int SpiOverRun;
-	unsigned int TmrMissCnt;
 } CHAN_STAT;
 
 
@@ -61,20 +60,12 @@ int uspi_getmips(uspi_handle* dev);
  DESCRIPTION: configure SPI
  PARAMS:        dev - handle to uspi device
                 spimode - NPCS line to assert (0=NPCS0 .. 3=NPCS3) or 4=loopbacl
-                bSpckInactiveHigh - is high level inactive in SPCK?
-                bSpckCaptureRising - capture data on rising edge?
                 SCBR - SPI clock baud rate divisor 1..255 (0-forbidden)
-                DLYBS - Delay before SPCK in clocks 0..255
-                DLYBCT - Delay between consequtive transfers 0..255
  RETURNS:     >0 on success
 ********************************************************************************************/
 int uspi_setspi(uspi_handle* dev,
-    spi_mode_t spimode,
-	char bSpckInactiveHigh,
-	char bSpckCaptureRising,
-	char SCBR,
-	char DLYBS,
-	char DLYBCT);
+    unsigned char loopback,
+	unsigned char SCBR);
 
 /*******************************************************************************************
  FUNCTION:    uspi_start

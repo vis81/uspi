@@ -151,7 +151,7 @@ int main(int argc, char** argv)
         }
         sample_count++;
     }
-    for(i=0;i<(split:1);i++)
+    for(i=0;i<(split?3:1);i++)
     {
         fseek(outfile[i],0,SEEK_SET);
         if(!split){

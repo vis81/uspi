@@ -19,6 +19,8 @@ typedef struct _SPIDESC{
 	U32 XferSize;
 	U32 BytesDone;
 	U32 IRQ;
+	BOOL loopback;
+	U8	SCBR;
 }SPIDESC,*PSPIDESC;
 
 
@@ -83,13 +85,6 @@ void spi_init ()
     AT91C_BASE_SPI->SPI_CR = (AT91C_SPI_SPIEN | AT91C_SPI_SWRST);	
     AT91C_BASE_SPI->SPI_CR = AT91C_SPI_SPIEN;
     
-	spi_config(SPI_INIT_LB,
-				SPI_INIT_CPOL_HIGH,
-				SPI_INIT_PHASE_RISING,
-				SPI_INIT_SCBR,
-				SPI_INIT_DLYBS,
-				SPI_INIT_DLYBCT);
-
 	// Configure mode and handler
 	AT91C_BASE_AIC->AIC_SMR[AT91C_ID_SPI] = AT91C_AIC_PRIOR_HIGHEST|
 											AT91C_AIC_SRCTYPE_INT_HIGH_LEVEL;
@@ -108,6 +103,8 @@ void spi_init ()
 	AT91C_BASE_AIC->AIC_IECR = 1 << AT91C_ID_SPI;
 	
 	gSpiDesc.XferSize=9;
+	gSpiDesc.loopback=SPI_INIT_LB;
+	gSpiDesc.SCBR=SPI_INIT_SCBR;
 	
 	
 	TRACE_INFO("SPI: Init done\n");
@@ -135,6 +132,22 @@ void spi_setup_xfer(U8 Spi, U8 xfersize, SPI_DONE_CB cb)
 	//set outputs	
 	AT91C_BASE_PIOA->PIO_OER=AT91C_PA13_MOSI|AT91C_PA14_SPCK|nCS_mask[Spi];
 #endif
+
+	//SPI MODE REGISTER
+	AT91C_BASE_SPI->SPI_MR =	AT91C_SPI_MSTR |	//Master mode
+								AT91C_SPI_PS_FIXED| //Fixed chip select
+								AT91C_SPI_MODFDIS| //modefault int disable 
+								(0xF<<16)	|			//Select none
+								(0<<24) |			//Delay Between Chip Selects
+								(gSpiDesc.loopback?AT91C_SPI_LLB:0); 	//loopback mode
+
+	//SPI CHIP SELECT REGISTER 0 
+	AT91C_BASE_SPI->SPI_CSR[Spi] =	AT91C_SPI_NCPHA |	//Clock phase
+									AT91C_SPI_BITS_8 |	//8 bits per transfer
+									(gSpiDesc.SCBR<<8) | //SCBR	Baud rate divisor
+									(1<<16)|			//DLYBS Delay before SPCK
+									(0<<24);			//DLYBCT delay between transfers
+
 	for(i=0;i<3;i++)
 		if(i!=Spi)
 			pio_set_input(nCS_mask[i],FALSE,FALSE);
@@ -162,42 +175,10 @@ void spiisr_start()
 }
 
 
-U32 spi_config(BOOL loopback,
-	BOOL SpckInactiveHigh,
-	BOOL SpckCaptureRising,
-	U8 SCBR,
-	U8 DLYBS,
-	U8 DLYBCT)
+U32 spi_config(BOOL loopback,U8 SCBR)
 {
-	U32 i;
-	
-	SCBR&=0xFF;
-	DLYBS&=0xFF;
-	DLYBCT&=0xFF;
-	if(!SCBR)SCBR=1;
-    //SPI MODE REGISTER
-    AT91C_BASE_SPI->SPI_MR = 	AT91C_SPI_MSTR | 	//Master mode
-    							AT91C_SPI_PS_FIXED|	//Fixed chip select
-    							AT91C_SPI_MODFDIS| //modefault int disable 
-    							(0xF<<16)	| 			//Select none
-    							(0<<24)	|			//Delay Between Chip Selects
-								(loopback?AT91C_SPI_LLB:0);		//loopback mode
-	
-	for(i=0;i<4;i++)
-	{		
-		//SPI CHIP SELECT REGISTER 0 
-		AT91C_BASE_SPI->SPI_CSR[i] =	(SpckInactiveHigh?AT91C_SPI_CPOL:0)|	//Clock polarity high
-										(SpckCaptureRising?AT91C_SPI_NCPHA:0) |	//Clock phase
-										
-										//AT91C_SPI_CSAAT |	//CS active after transfer!!!!!!!!!!!!!!1
-										
-										AT91C_SPI_BITS_8|	//8 bits per transfer
-										(SCBR<<8)| 			//SCBR	Baud rate divisor
-										(DLYBS<<16)|			//DLYBS Delay before SPCK
-										(DLYBCT<<24);			//DLYBCT delay between transfers
-	}
-	TRACE_INFO("SPI: Setup LB=%u, CPOL=%u, NCPHA=%u, SCBR=%u, DLYBS=%u, DLYBCT=%u\n",loopback,
-				SpckInactiveHigh,SpckCaptureRising,SCBR,DLYBS,DLYBCT);
+	gSpiDesc.loopback=loopback;
+	gSpiDesc.SCBR=(SCBR?SCBR:0);
 	return 0;
 }
 

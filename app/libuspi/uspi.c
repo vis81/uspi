@@ -161,18 +161,17 @@ int uspi_start(uspi_handle* dev,
                 unsigned bufsize)
 {
     unsigned ret;
-    char tmp[5];
+    struct cmd_start_in params;
 
-    tmp[0]=spi;
-    tmp[1]=drdy;
-    tmp[2]=adcnum;
-    tmp[3]=hsize;
-    //tmp[4]=dsize;
+    params.spi=spi;
+    params.drdy=drdy;
+    params.adcnum=adcnum;
+    params.hsize=hsize;
 
     usb_resetep((usb_dev_handle*)dev, 0x81);
 
-    ret=usb_control_msg((usb_dev_handle*)dev, USB_TYPE_VENDOR, CMD_START, 0, 0, tmp,5, 1000);
-    if(ret!= 5)
+    ret=usb_control_msg((usb_dev_handle*)dev, USB_TYPE_VENDOR, CMD_START, 0, 0, &params,sizeof(params), 1000);
+    if(ret!= sizeof(params))
       return -1;
 
     up.dev=dev;
@@ -181,7 +180,6 @@ int uspi_start(uspi_handle* dev,
     up.totalsize=count*(hsize+9);
     if(count)
         up.bufsize=(count*(hsize+9)+64)/64*64;
-
     hThread=_beginthread(uspi_thread, 0,&up);
     if(count)
         WaitForSingleObject( hThread, INFINITE );
@@ -207,21 +205,13 @@ int uspi_getstat(uspi_handle* dev,CHAN_STAT* stat)
 }
 
 int uspi_setspi(uspi_handle* dev,
-    spi_mode_t spimode,
-	char bSpckInactiveHigh,
-	char bSpckCaptureRising,
-	char SCBR,
-	char DLYBS,
-	char DLYBCT)
+    unsigned char loopback,
+	unsigned char SCBR)
 {
-    char tmp[4];
+    struct cmd_setspi_in params;
     unsigned ret;
-    tmp[0]=(spimode&0x7)|
-            (bSpckInactiveHigh?0x10:0)|
-            (bSpckCaptureRising?0x20:0);
-    tmp[1]=SCBR;
-    tmp[2]=DLYBS;
-    tmp[3]=DLYBCT;
-    ret=usb_control_msg((usb_dev_handle*)dev, USB_TYPE_VENDOR, CMD_SETSPI, 0, 0, tmp, 4, 10000);
+    params.loopback=loopback;
+    params.scbr=SCBR;
+    ret=usb_control_msg((usb_dev_handle*)dev, USB_TYPE_VENDOR, CMD_SETSPI, 0, 0, &params, sizeof(params), 1000);
     return ret;
 }

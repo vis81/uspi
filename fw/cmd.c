@@ -45,7 +45,6 @@ U32 cmd_start(USB_SETUP_PACKET* pSetup)
 	U8 	spi=0,
 		drdy=0,
 		hsize=4,
-		dsize=1,
 		adcnum=3;
 
 	if(pSetup->wLength>0)
@@ -58,11 +57,7 @@ U32 cmd_start(USB_SETUP_PACKET* pSetup)
 		adcnum=pSetup->Payload[2];
 	
 	if(pSetup->wLength>3)
-		hsize=pSetup->Payload[3];
-
-	if(pSetup->wLength>4)
-			dsize=pSetup->Payload[4];
-	
+		hsize=pSetup->Payload[3];	
 
 	if(adcnum>4 || adcnum<1)
 		adcnum=3;
@@ -70,7 +65,13 @@ U32 cmd_start(USB_SETUP_PACKET* pSetup)
 	if(hsize>4)
 		hsize=4;
 	
-	chan_start(spi,drdy,adcnum,hsize,dsize);
+	if(drdy>3)
+		drdy=0;
+	
+	if(spi>3)
+		spi=0;
+	
+	chan_start(spi,drdy,adcnum,hsize);
 	return 0;
 }
 
@@ -82,19 +83,20 @@ U32 cmd_stop(USB_SETUP_PACKET* pSetup)
 
 U32 cmd_getstat(USB_SETUP_PACKET* pSetup)
 {
-	gUspiChannelDesc.SpiOverRun=gAdcDesc.spi_ovrun;
-	memcpy(pSetup->Payload,&gUspiChannelDesc.PktSent,16);
-	return 16;
+	struct cmd_getstat_out stat;
+
+	stat.PktSent = gUspiChannelDesc.PktSent;
+	stat.UsbOvflw = gUspiChannelDesc.UsbOvflw;
+	stat.SpiOverRun = gAdcDesc.spi_ovrun;
+
+	memcpy(pSetup->Payload,&stat,sizeof(stat));
+	return sizeof(stat);
 }
 
 U32 cmd_setspi(USB_SETUP_PACKET* pSetup)
 {
-	spi_config( (pSetup->Payload[0]&0x7),
-				pSetup->Payload[0]&0x10,
-				pSetup->Payload[0]&0x20,
-				pSetup->Payload[1],
-				pSetup->Payload[2],
-				pSetup->Payload[3]
+	spi_config( pSetup->Payload[0],
+				pSetup->Payload[1]
 			);
 	return 0;
 }

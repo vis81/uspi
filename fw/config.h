@@ -41,10 +41,6 @@
 //SPI
 #define SPI_FIQ
 #define	SPI_INIT_LB				FALSE
-#define	SPI_INIT_CPOL_HIGH 		FALSE
-#define SPI_INIT_PHASE_RISING	TRUE
 #define SPI_INIT_SCBR			4
-#define	SPI_INIT_DLYBS			1
-#define	SPI_INIT_DLYBCT			0
 
 #endif

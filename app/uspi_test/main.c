@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include <unistd.h>
-
+#include <string.h>
 #include "uspi.h"
 
 #define BUF_SIZE 10*1024
@@ -32,15 +32,12 @@ int main(int argc,char** argv)
     unsigned spi=0;
     unsigned drdy=2;
     unsigned hsize=4;
-    unsigned dsize=1;
     unsigned time=20;
     unsigned count=0;
     unsigned loops=1;
     unsigned adcnum=1;
     unsigned scbr=1;
     unsigned arg=1;
-    char bSpckInactiveHigh=0;
-    char bSpckCaptureRising=1;
 
     while(arg<argc)
     {
@@ -99,16 +96,6 @@ int main(int argc,char** argv)
             continue;
         }
         else
-        if(!strcmp(argv[arg],"-edge"))
-        {
-            arg++;
-            if(!strcmp(argv[arg],"rising"))
-                bSpckCaptureRising=1;
-            else
-                bSpckCaptureRising=0;
-            arg++;
-            continue;
-        }else
         if(!strcmp(argv[arg],"-count"))
         {
             arg++;
@@ -123,8 +110,8 @@ int main(int argc,char** argv)
     }
 
 
-    printf("Start header=%u bytes, spi channel=%u, nadc=%u, scbr =%u clocks, %s edge, time=%u sec, %u loops\n",
-        hsize,spi,adcnum, scbr,(bSpckCaptureRising?"rising":"falling"), time,loops);
+    printf("Start header=%u bytes, spi channel=%u, nadc=%u, scbr =%u clocks, time=%u sec, %u loops\n",
+        hsize,spi,adcnum, scbr, time,loops);
 
     uspi_handle* dev = uspi_open();
     if(!dev)
@@ -137,7 +124,7 @@ int main(int argc,char** argv)
     if(ret)
         printf("Free MIPS in idle: %2u.%u%%\n",ret/10,ret%10);
 
-    uspi_setspi(dev,0,0,bSpckCaptureRising,scbr,1,0);
+    uspi_setspi(dev,0,scbr);
     for(loop=0;loop<loops;loop++)
     {
         char filename[10];
@@ -149,7 +136,7 @@ int main(int argc,char** argv)
             break;
         }
         printf("Loop%u\n",loop);
-        printf("  SENT         USB      TMR      SPI  MIPS\n");
+        printf("  SENT         USB      SPI  MIPS\n");
         //ret=uspi_settimer(dev,freq);
 
         ret=uspi_start(dev,spi,drdy,adcnum,hsize,count,f,1024*64);
@@ -161,7 +148,7 @@ int main(int argc,char** argv)
                 ret=uspi_getstat(dev,&stat);
                 ret=uspi_getmips(dev);
                 if(ret)
-                 printf("%8u %8u %8u %8u   %2u.%u%%\n",stat.PktSent,stat.UsbOvflw,stat.TmrMissCnt,stat.SpiOverRun,ret/10,ret%10);
+                 printf("%8u %8u %8u   %2u.%u%%\n",stat.PktSent,stat.UsbOvflw,stat.SpiOverRun,ret/10,ret%10);
             }
         }
         ret=uspi_stop(dev);
@@ -169,7 +156,7 @@ int main(int argc,char** argv)
         fclose(f);
         ret=uspi_getstat(dev,&stat);
         if(ret)
-            printf("%8u %8u %8u %8u\n",stat.PktSent,stat.UsbOvflw,stat.TmrMissCnt,stat.SpiOverRun);
+            printf("%8u %8u %8u\n",stat.PktSent,stat.UsbOvflw,stat.SpiOverRun);
 
         printf("Execution time %u\n",t2-t1);
     }

@@ -17,11 +17,7 @@ typedef enum _spi_mode_t{
 void spi_init (void);
 
 U32 spi_config(BOOL loopback,
-	BOOL SpckInactiveHigh,
-	BOOL SpckCaptureRising,
-	U8 SCBR,
-	U8 DLYBS,
-	U8 DLYBCT);
+	U8 SCBR);
 
 
 void spi_setup_xfer(U8 Spi, U8 xfersize, SPI_DONE_CB cb);
