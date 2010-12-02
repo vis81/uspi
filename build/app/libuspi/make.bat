@@ -1,6 +1,2 @@
-%CC% -c -O2 -s -I../../../libusb-win32-bin-1.2.1.0/include ../../../app/libuspi/uspi.c -o uspi.o
-
-copy ..\..\..\libusb-win32-bin-1.2.1.0\lib\gcc\libusb.a  ..\..\..\out\lib\libuspi.a
-%AR% -r ../../../out/lib/libuspi.a uspi.o 
-
+%CC% -shared -O2 -mthreads -s -I../../../libusb-win32-bin-1.2.1.0/include -L../../../libusb-win32-bin-1.2.1.0/lib/gcc -Wl,--out-implib,../../../out/lib/libuspi.a ../../../app/libuspi/uspi.c -lusb -o../../../out/bin/uspi.dll
 copy ..\..\..\app\libuspi\uspi.h  ..\..\..\out\inc

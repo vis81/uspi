@@ -7,12 +7,13 @@
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="..\..\bin\debug\libuspi" prefix_auto="1" extension_auto="1" />
-				<Option working_dir="" />
+				<Option output="..\..\bin\debug\uspi" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="..\..\bin\debug" />
 				<Option object_output="obj\Debug\" />
-				<Option type="2" />
+				<Option type="3" />
 				<Option compiler="gcc" />
 				<Option createDefFile="1" />
+				<Option createStaticLib="1" />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-g" />
@@ -35,6 +36,7 @@
 			</Target>
 		</Build>
 		<Compiler>
+			<Add option="-mthreads" />
 			<Add directory="..\..\..\libusb-win32-bin-1.2.1.0\include" />
 		</Compiler>
 		<Linker>
