@@ -8,20 +8,16 @@
 struct uspi_handle;
 typedef struct uspi_handle uspi_handle;
 
-typedef enum _spi_mode_t{
-    NPCS0,
-    NPCS1,
-    NPCS2,
-    NPCS3,
-    LOOPBACK
-}spi_mode_t;
-
-typedef struct _CHAN_STAT {
+struct uspi_stat {
 	unsigned int PktSent;
 	unsigned int UsbOvflw;
 	unsigned int SpiOverRun;
-} CHAN_STAT;
+};
 
+struct uspi_sample {
+	unsigned int time;
+	unsigned char data[3][3];
+} __attribute__((__packed__));
 
 /*******************************************************************************************
 ******************************   FUNCTIONS     *********************************************
@@ -35,6 +31,8 @@ typedef struct _CHAN_STAT {
  RETURNS:     handle to uspi device
 ********************************************************************************************/
 uspi_handle* uspi_open();
+
+int uspi_fw_version(uspi_handle* uspi,char* buf, unsigned size);
 
 
 /*******************************************************************************************
@@ -59,7 +57,7 @@ int uspi_getmips(uspi_handle* dev);
  FUNCTION:    uspi_setspi
  DESCRIPTION: configure SPI
  PARAMS:        dev - handle to uspi device
-                spimode - NPCS line to assert (0=NPCS0 .. 3=NPCS3) or 4=loopbacl
+                loopback - internal SPI loopback enable
                 SCBR - SPI clock baud rate divisor 1..255 (0-forbidden)
  RETURNS:     >0 on success
 ********************************************************************************************/
@@ -82,10 +80,7 @@ int uspi_start(uspi_handle* dev,
                 unsigned spi,
                 unsigned drdy,
                 unsigned adcnum,
-                unsigned hsize,
-                unsigned dsize,
-                FILE* file,
-                unsigned bufsize);
+                unsigned hsize);
 
 
 
@@ -104,7 +99,8 @@ int uspi_stop(uspi_handle* dev);
                 stat - pointer to CHAN_STAT structure where stats will be written
  RETURNS:     >0 on success
 ********************************************************************************************/
-int uspi_getstat(uspi_handle* dev,CHAN_STAT* stat);
+int uspi_getstat(uspi_handle* dev, struct uspi_stat* stat);
 
+int uspi_read(uspi_handle* uspi, struct uspi_sample *samples, unsigned count);
 
 #endif

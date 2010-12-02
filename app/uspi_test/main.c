@@ -28,7 +28,7 @@ int main(int argc,char** argv)
     //usb_dev_handle *dev = NULL; /* the device handle */
     clock_t t1,t2;
     FILE* f;
-    CHAN_STAT stat;
+    struct uspi_stat stat;
     unsigned spi=0;
     unsigned drdy=2;
     unsigned hsize=4;
@@ -38,6 +38,7 @@ int main(int argc,char** argv)
     unsigned adcnum=1;
     unsigned scbr=1;
     unsigned arg=1;
+    struct uspi_sample samples[1000];
 
     while(arg<argc)
     {
@@ -137,19 +138,20 @@ int main(int argc,char** argv)
         }
         printf("Loop%u\n",loop);
         printf("  SENT         USB      SPI  MIPS\n");
-        //ret=uspi_settimer(dev,freq);
-
-        ret=uspi_start(dev,spi,drdy,adcnum,hsize,count,f,1024*64);
-        if(!count){
-            t1=clock();
-            for(i=0;i<time*10;i++)
-            {
-                _sleep(95);
-                ret=uspi_getstat(dev,&stat);
-                ret=uspi_getmips(dev);
-                if(ret)
-                 printf("%8u %8u %8u   %2u.%u%%\n",stat.PktSent,stat.UsbOvflw,stat.SpiOverRun,ret/10,ret%10);
-            }
+        ret=uspi_start(dev,spi,drdy,adcnum,hsize);
+        t1=clock();
+        for(i=0;i<time*10;i++)
+        {
+            _sleep(30);
+            ret=uspi_read(dev, samples, sizeof(samples)/sizeof(struct uspi_sample));
+            if(ret)
+                fwrite(samples,sizeof(struct uspi_sample),ret,f);
+            //if(ret!=sizeof(samples)/sizeof(struct uspi_sample))
+            //    printf();
+            ret=uspi_getstat(dev,&stat);
+            ret=uspi_getmips(dev);
+            if(ret)
+             printf("%8u %8u %8u   %2u.%u%%\n",stat.PktSent,stat.UsbOvflw,stat.SpiOverRun,ret/10,ret%10);
         }
         ret=uspi_stop(dev);
         t2=clock();

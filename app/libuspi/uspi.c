@@ -1,24 +1,27 @@
+#include <usb.h>
+#include <process.h>
+#include <stdio.h>
+#include <fcntl.h>
 #include "uspi.h"
 #include "../../FW/commands.h"
-#include <usb.h>
-#include "process.h"
-#include "stdio.h"
-#include "windows.h"
+
 
 #define MY_VID 0xe463
 #define MY_PID 0x0007
 
+#define PIPE_SIZE 64*1024
+#define BUF_SIZE 13*64
+#define USB_TIMEOUT 1000
 
+enum PIPES { READ, WRITE }; /* Constants 0 and 1 for READ and WRITE */
 
-typedef struct _uspi_thread_params{
-    uspi_handle* dev;
-    FILE* f;
-    unsigned bufsize;
-    unsigned totalsize;
-}uspi_thread_params;
-
-HANDLE hThread;
-uspi_thread_params up;
+struct uspi_handle{
+    usb_dev_handle* dev;
+    int fdpipe[2];
+    HANDLE hThread;
+    int rx_bytes;
+    int tx_bytes;
+};
 
 
 static usb_dev_handle *open_dev(void)
@@ -43,16 +46,9 @@ static usb_dev_handle *open_dev(void)
 uspi_handle* uspi_open()
 {
     usb_dev_handle* dev;
+    uspi_handle* uspih;
     char tmp[30];
     unsigned ret;
-
-    if(!SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS))
-   {
-      ret = GetLastError();
-      if( REALTIME_PRIORITY_CLASS == ret)
-         printf("Already in background mode\n");
-      else printf("Failed to enter background mode (%d)\n", ret);
-   }
 
     usb_init(); /* initialize the library */
     usb_find_busses(); /* find all busses */
@@ -78,49 +74,61 @@ uspi_handle* uspi_open()
       return NULL;
     }
 
-    ret=usb_get_string_simple(dev, 1, tmp, 100);
+    ret=usb_get_string_simple(dev, 1, tmp, USB_TIMEOUT);
     if(ret){
         tmp[ret]=0;
         printf("Manufacturer:%s\n",tmp);
     }
 
-    ret=usb_get_string_simple(dev, 2, tmp, 100);
+    ret=usb_get_string_simple(dev, 2, tmp, USB_TIMEOUT);
     if(ret){
         tmp[ret]=0;
         printf("Product:%s\n",tmp);
     }
-    ret=usb_get_string_simple(dev, 3, tmp, 100);
+    ret=usb_get_string_simple(dev, 3, tmp, USB_TIMEOUT);
     if(ret){
         tmp[ret]=0;
         printf("Version:%s\n",tmp);
     }
-    return (uspi_handle*)dev;
+    uspih = (uspi_handle*)malloc(sizeof(uspi_handle));
+    uspih->dev=dev;
+    return uspih;
 }
 
-void uspi_close(uspi_handle* dev)
+void uspi_close(uspi_handle* uspi)
 {
-    usb_close((usb_dev_handle*)dev);
+    if(usb_release_interface(uspi->dev, 0) < 0)
+        printf("error: release interface 0 failed\n");
+    usb_close(uspi->dev);
 }
 
-int uspi_getmips(uspi_handle* dev)
+int uspi_fw_version(uspi_handle* uspi,char* buf, unsigned size)
 {
-    unsigned ret;
-    char tmp[4];
-    ret=usb_control_msg((usb_dev_handle*)dev, USB_TYPE_VENDOR|0x80, CMD_GETMIPS, 0, 0, tmp, 4, 10000);
-    if(ret!= 4)
-        ret=-1;
-    else
-        ret=*(int*)tmp;
-    return ret;
+    return usb_get_string_simple(uspi->dev, 3, buf, size);
 }
 
-void uspi_thread(uspi_thread_params* up)
+int uspi_getmips(uspi_handle* uspi)
 {
+    unsigned mips=-1;
+    usb_control_msg(uspi->dev, USB_TYPE_VENDOR|0x80, CMD_GETMIPS, 0, 0, (char*)&mips, sizeof(mips), USB_TIMEOUT);
+    return mips;
+}
+
+static void uspi_thread(void* param)
+{
+    uspi_handle* uspi=(uspi_handle*) param;
     int ret;
-    unsigned total=0;
-    char* pbuf=malloc(up->bufsize);
+    char* pbuf=malloc(BUF_SIZE);
     if(!pbuf)
         goto exit;
+
+    if(!SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS))
+   {
+      ret = GetLastError();
+      if( REALTIME_PRIORITY_CLASS == ret)
+         printf("Already in background mode\n");
+      else printf("Failed to enter background mode (%d)\n", ret);
+   }
 
     if(!SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_TIME_CRITICAL))
    {
@@ -131,87 +139,89 @@ void uspi_thread(uspi_thread_params* up)
         printf("Failed to enter background mode (%d)\n", ret);
    }
 
-    do{
-        ret=usb_bulk_read((usb_dev_handle*)up->dev, 0x81,pbuf,up->bufsize, 10000);
+    while (1) {
+        ret=usb_bulk_read(uspi->dev, 0x81,pbuf,BUF_SIZE, USB_TIMEOUT);
         if(ret>0){
-            total+=ret;
-            if(up->totalsize)
-                if(total>up->totalsize)
-                {
-                    fwrite(pbuf,ret-(total-up->totalsize),1,up->f);
-                    break;
-                }
-
-            fwrite(pbuf,ret,1,up->f);
-        }
-    }while(ret==up->bufsize);
-    //printf("exit %u\n",ret);
+            int ret2=write(uspi->fdpipe[WRITE], pbuf, ret);
+            if(ret!=BUF_SIZE || ret2!=BUF_SIZE){
+                break;
+            }
+        }else
+            break;
+    };
+    free(pbuf);
 exit:
     _endthread();
     return;
 }
 
-int uspi_start(uspi_handle* dev,
+int uspi_read(uspi_handle* uspi, struct uspi_sample *samples, unsigned count)
+{
+    int ret;
+    unsigned total=0;
+    count*=sizeof(struct uspi_sample);
+    while(count){
+        ret = read( uspi->fdpipe[READ], ((char *)samples)+total, count);
+        if(ret<0)
+            break;
+        total+=ret;
+        count-=ret;
+    }
+    return total/sizeof(struct uspi_sample);
+}
+
+
+int uspi_start(uspi_handle* uspi,
                 unsigned spi,
                 unsigned drdy,
                 unsigned adcnum,
-                unsigned hsize,
-                unsigned count,
-                FILE* file,
-                unsigned bufsize)
+                unsigned hsize)
 {
     unsigned ret;
     struct cmd_start_in params;
 
+
+    /* Open a set of pipes */
+    if( _pipe( uspi->fdpipe, PIPE_SIZE, O_BINARY ) == -1 )
+          return errno;
     params.spi=spi;
     params.drdy=drdy;
     params.adcnum=adcnum;
     params.hsize=hsize;
-
-    usb_resetep((usb_dev_handle*)dev, 0x81);
-
-    ret=usb_control_msg((usb_dev_handle*)dev, USB_TYPE_VENDOR, CMD_START, 0, 0, &params,sizeof(params), 1000);
+    usb_resetep(uspi->dev, 0x81);
+    ret=usb_control_msg(uspi->dev, USB_TYPE_VENDOR, CMD_START, 0, 0, (void*)&params,sizeof(params), USB_TIMEOUT);
     if(ret!= sizeof(params))
       return -1;
-
-    up.dev=dev;
-    up.f=file;
-    up.bufsize=bufsize;
-    up.totalsize=count*(hsize+9);
-    if(count)
-        up.bufsize=(count*(hsize+9)+64)/64*64;
-    hThread=_beginthread(uspi_thread, 0,&up);
-    if(count)
-        WaitForSingleObject( hThread, INFINITE );
+    uspi->hThread = (HANDLE)_beginthread(uspi_thread, 0,uspi);
     return 0;
 }
 
-int uspi_stop(uspi_handle* dev)
-{
-    unsigned ret;
-    ret=usb_control_msg((usb_dev_handle*)dev, USB_TYPE_VENDOR, CMD_STOP, 0, 0, NULL, 0, 10000);
-    if(ret!= 0)
-      return -1;
-    //usb_resetep(dev, usb);
-    WaitForSingleObject( hThread, INFINITE );
-    return 0;
-}
 
-int uspi_getstat(uspi_handle* dev,CHAN_STAT* stat)
+int uspi_stop(uspi_handle* uspi)
 {
     unsigned ret;
-    ret=usb_control_msg((usb_dev_handle*)dev, USB_TYPE_VENDOR|0x80, CMD_GETSTAT, 0, 0, stat, sizeof(CHAN_STAT), 10000);
+    ret=usb_control_msg(uspi->dev, USB_TYPE_VENDOR, CMD_STOP, 0, 0, NULL, 0, USB_TIMEOUT);
+    WaitForSingleObject( uspi->hThread, INFINITE );
+    close(uspi->fdpipe[READ]);
+    close(uspi->fdpipe[WRITE]);
+    uspi->fdpipe[READ]=uspi->fdpipe[WRITE]=0;
+    uspi->hThread=NULL;
     return ret;
 }
 
-int uspi_setspi(uspi_handle* dev,
+int uspi_getstat(uspi_handle* uspi,struct uspi_stat *stat)
+{
+    if(!stat)
+        return -1;
+    return usb_control_msg(uspi->dev, USB_TYPE_VENDOR|0x80, CMD_GETSTAT, 0, 0, (char*)stat, sizeof(struct uspi_stat), USB_TIMEOUT);
+}
+
+int uspi_setspi(uspi_handle* uspi,
     unsigned char loopback,
 	unsigned char SCBR)
 {
     struct cmd_setspi_in params;
-    unsigned ret;
     params.loopback=loopback;
     params.scbr=SCBR;
-    ret=usb_control_msg((usb_dev_handle*)dev, USB_TYPE_VENDOR, CMD_SETSPI, 0, 0, &params, sizeof(params), 1000);
-    return ret;
+    return usb_control_msg(uspi->dev, USB_TYPE_VENDOR, CMD_SETSPI, 0, 0, (char*) &params, sizeof(params), USB_TIMEOUT);
 }
