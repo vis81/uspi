@@ -9,8 +9,8 @@
 #define MY_VID 0xe463
 #define MY_PID 0x0007
 
-#define PIPE_SIZE 64*1024
-#define BUF_SIZE 13*64
+#define PIPE_SIZE 10*1024*1024
+#define BUF_SIZE 13*64*100
 #define USB_TIMEOUT 1000
 
 enum PIPES { READ, WRITE }; /* Constants 0 and 1 for READ and WRITE */
@@ -171,6 +171,39 @@ int uspi_read(uspi_handle* uspi, struct uspi_sample *samples, unsigned count)
 }
 
 
+int uspi_read_wave(uspi_handle* uspi, double* data, unsigned count)
+{
+    int ret;
+    unsigned total=0;
+    static int a=0;
+    struct uspi_sample sample;
+    while(total<count){
+        double double_val;
+        unsigned char *padcval;
+        int int_val;
+
+        ret = read( uspi->fdpipe[READ], (char *)&sample, sizeof(struct uspi_sample));
+        if(ret<0)
+            break;
+        padcval=(unsigned char*)sample.data[0];
+        int_val=((padcval[0]<<16)&0xFF0000) |
+                ((padcval[1]<<8)&0xFF00) |
+                (padcval[2]&0xFF);
+        if(int_val&0x800000)//extend sign
+            int_val|=0xFF000000;
+
+        if(int_val)
+            double_val=int_val*5.0/16777216.0;
+        else
+            double_val=0.0;
+        double_val=a+total;
+        data[total]=double_val;
+        total++;
+    }
+    a++;
+    return total;
+}
+
 int uspi_start(uspi_handle* uspi,
                 unsigned spi,
                 unsigned drdy,
@@ -201,7 +234,7 @@ int uspi_stop(uspi_handle* uspi)
 {
     unsigned ret;
     ret=usb_control_msg(uspi->dev, USB_TYPE_VENDOR, CMD_STOP, 0, 0, NULL, 0, USB_TIMEOUT);
-    WaitForSingleObject( uspi->hThread, INFINITE );
+    //WaitForSingleObject( uspi->hThread, INFINITE );
     close(uspi->fdpipe[READ]);
     close(uspi->fdpipe[WRITE]);
     uspi->fdpipe[READ]=uspi->fdpipe[WRITE]=0;

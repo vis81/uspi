@@ -5,7 +5,7 @@
 		<Project filename="uspi_test\uspi_test.cbp">
 			<Depends filename="libuspi\libuspi.cbp" />
 		</Project>
-		<Project filename="libuspi\libuspi.cbp" />
-		<Project filename="uspi_conv\uspi_conv.cbp" active="1" />
+		<Project filename="libuspi\libuspi.cbp" active="1" />
+		<Project filename="uspi_conv\uspi_conv.cbp" />
 	</Workspace>
 </CodeBlocks_workspace_file>
