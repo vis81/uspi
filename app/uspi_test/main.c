@@ -140,14 +140,12 @@ int main(int argc,char** argv)
         printf("  SENT         USB      SPI  MIPS\n");
         ret=uspi_start(dev,spi,drdy,adcnum,hsize);
         t1=clock();
-        for(i=0;i<time*10;i++)
+        for(i=0;i<(time*32000)/(sizeof(samples)/sizeof(struct uspi_sample));i++)
         {
-            _sleep(30);
             ret=uspi_read(dev, samples, sizeof(samples)/sizeof(struct uspi_sample));
-            if(ret)
-                fwrite(samples,sizeof(struct uspi_sample),ret,f);
-            //if(ret!=sizeof(samples)/sizeof(struct uspi_sample))
-            //    printf();
+            if(!ret)
+                break;
+            fwrite(samples,sizeof(struct uspi_sample),ret,f);
             ret=uspi_getstat(dev,&stat);
             ret=uspi_getmips(dev);
             if(ret)

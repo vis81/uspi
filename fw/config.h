@@ -16,7 +16,7 @@
 #define PID						0x0007
 #define MANUFACTURER 			L"Tomek"
 #define PRODUCT 				L"Uspi"
-#define VERSION					L"Test_07_11"
+#define VERSION					L"Test_13_12"
 
 //USB
 #define USB_EP_NUM				2

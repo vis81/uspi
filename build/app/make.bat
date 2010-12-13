@@ -22,3 +22,4 @@ call make.bat
 
 cd ..
 copy test.bat ..\..\out\bin
+copy ..\..\app\LabView\uspi.vi ..\..\out\bin
