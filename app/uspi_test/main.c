@@ -5,7 +5,7 @@
 #include <string.h>
 #include "uspi.h"
 
-#define BUF_SIZE 10*1024
+#define BUF_SIZE 10000
 
 
 #define TIME 10
@@ -13,18 +13,21 @@
 void usage()
 {
     printf("Usage: uspi_test [options]\n");
-    printf(" -header [headersize in bytes]\n");
-    printf(" -spi [spi channel 0..3 or 4-loopback]\n");
+    //printf(" -header [headersize in bytes]\n");
+    printf(" -spi [spi channel 0..3]\n");
+    printf(" -drdy [used nDRDY pin 0..3]\n");
     printf(" -nadc [number of spi devices in chain]\n");
     printf(" -scbr [SPI CLK divisor (base 48MHz)]\n");
-    printf(" -edge [falling/rising]\n");
-    printf(" -time [time of execution in sec]\n");
+    printf(" -spilb - enable internal SPI loopback\n");
+    printf(" -time [time of execution in ms]\n");
+    printf(" -count [number of samples to read, ovverrides -time]\n");
+    printf(" -loops [number of loops to execute]\n");
     printf(" -help  - display this help\n");
 }
 
 int main(int argc,char** argv)
 {
-    int ret,i,loop;
+    int ret,loop;
     //usb_dev_handle *dev = NULL; /* the device handle */
     clock_t t1,t2;
     FILE* f;
@@ -37,8 +40,9 @@ int main(int argc,char** argv)
     unsigned loops=1;
     unsigned adcnum=1;
     unsigned scbr=1;
+    unsigned spi_lb=0;
     unsigned arg=1;
-    struct uspi_sample samples[1000];
+    struct uspi_sample samples[BUF_SIZE];
 
     while(arg<argc)
     {
@@ -47,6 +51,7 @@ int main(int argc,char** argv)
             usage();
             return 0;
         }else
+        /*
         if(!strcmp(argv[arg],"-header"))
         {
             arg++;
@@ -54,6 +59,7 @@ int main(int argc,char** argv)
             arg++;
             continue;
         }else
+        */
         if(!strcmp(argv[arg],"-spi"))
         {
             arg++;
@@ -104,15 +110,35 @@ int main(int argc,char** argv)
             arg++;
             continue;
         }else
+        if(!strcmp(argv[arg],"-spilb"))
+        {
+            arg++;
+            spi_lb=1;
+            continue;
+        }else
         {
             usage();
             return 1;
         }
     }
 
+    if(!count)
+        count = time * 32;
+    else
+        time = count / 32;
 
-    printf("Start header=%u bytes, spi channel=%u, nadc=%u, scbr =%u clocks, time=%u sec, %u loops\n",
-        hsize,spi,adcnum, scbr, time,loops);
+    printf("Starting USPI test\n");
+    printf("SPI channel :%u\n", spi);
+    printf("Active DRDY :%u\n", drdy);
+    printf("ADC count   :%u\n", adcnum);
+    printf("SCBR        :%u clocks\n", scbr);
+    printf("SPI loopback:%s\n", spi_lb ? "true" : "false");
+    printf("Header size :%u bytes\n", hsize);
+    printf("Loops       :%u\n", loops);
+    printf("Time        :%u ms\n", time);
+    printf("Count       :%u samples\n", count);
+    printf("\n");
+
 
     uspi_handle* dev = uspi_open();
     if(!dev)
@@ -125,10 +151,11 @@ int main(int argc,char** argv)
     if(ret)
         printf("Free MIPS in idle: %2u.%u%%\n",ret/10,ret%10);
 
-    uspi_setspi(dev,0,scbr);
+    uspi_setspi(dev,spi_lb,scbr);
     for(loop=0;loop<loops;loop++)
     {
         char filename[10];
+        unsigned total=0;
         sprintf(filename,"uspi%u.dat",loop);
         f=fopen(filename,"wb");
         if(!f)
@@ -140,16 +167,18 @@ int main(int argc,char** argv)
         printf("  SENT         USB      SPI  MIPS\n");
         ret=uspi_start(dev,spi,drdy,adcnum,hsize);
         t1=clock();
-        for(i=0;i<(time*32000)/(sizeof(samples)/sizeof(struct uspi_sample));i++)
+        while(total<count)
         {
-            ret=uspi_read(dev, samples, sizeof(samples)/sizeof(struct uspi_sample));
+            unsigned left = count - total;
+            ret=uspi_read(dev, samples, BUF_SIZE > left ? left : BUF_SIZE);
             if(!ret)
                 break;
             fwrite(samples,sizeof(struct uspi_sample),ret,f);
+            total+=ret;
             ret=uspi_getstat(dev,&stat);
             ret=uspi_getmips(dev);
             if(ret)
-             printf("%8u %8u %8u   %2u.%u%%\n",stat.PktSent,stat.UsbOvflw,stat.SpiOverRun,ret/10,ret%10);
+                printf("%8u %8u %8u   %2u.%u%%\n",stat.PktSent,stat.UsbOvflw,stat.SpiOverRun,ret/10,ret%10);
         }
         ret=uspi_stop(dev);
         t2=clock();
