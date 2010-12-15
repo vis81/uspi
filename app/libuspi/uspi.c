@@ -9,7 +9,7 @@
 #define MY_VID 0xe463
 #define MY_PID 0x0007
 
-#define PIPE_SIZE 10*1024*1024
+#define PIPE_SIZE 1*1024*1024
 #define BUF_SIZE 13*64*100
 #define USB_TIMEOUT 1000
 
@@ -196,7 +196,6 @@ int uspi_read_wave(uspi_handle* uspi, double* data, unsigned count)
             double_val=int_val*5.0/16777216.0;
         else
             double_val=0.0;
-        double_val=a+total;
         data[total]=double_val;
         total++;
     }
@@ -234,9 +233,9 @@ int uspi_stop(uspi_handle* uspi)
 {
     unsigned ret;
     ret=usb_control_msg(uspi->dev, USB_TYPE_VENDOR, CMD_STOP, 0, 0, NULL, 0, USB_TIMEOUT);
-    //WaitForSingleObject( uspi->hThread, INFINITE );
     close(uspi->fdpipe[READ]);
     close(uspi->fdpipe[WRITE]);
+    WaitForSingleObject( uspi->hThread, USB_TIMEOUT );
     uspi->fdpipe[READ]=uspi->fdpipe[WRITE]=0;
     uspi->hThread=NULL;
     return ret;
