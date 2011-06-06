@@ -12,6 +12,7 @@ struct uspi_stat {
 	unsigned int PktSent;
 	unsigned int UsbOvflw;
 	unsigned int SpiOverRun;
+    unsigned int BufLevel;
 };
 
 struct uspi_sample {

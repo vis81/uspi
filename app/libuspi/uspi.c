@@ -9,7 +9,7 @@
 #define MY_VID 0xe463
 #define MY_PID 0x0007
 
-#define PIPE_SIZE 1*1024*1024
+#define PIPE_SIZE 2*1024*1024
 #define BUF_SIZE 13*64*100
 #define USB_TIMEOUT 1000
 
@@ -23,7 +23,7 @@ struct uspi_handle{
     int tx_bytes;
 };
 
-
+unsigned bread,bwrite;
 static usb_dev_handle *open_dev(void)
 {
   struct usb_bus *bus;
@@ -146,6 +146,7 @@ static void uspi_thread(void* param)
             if(ret!=BUF_SIZE || ret2!=BUF_SIZE){
                 break;
             }
+            bwrite+=BUF_SIZE;
         }else
             break;
     };
@@ -170,37 +171,65 @@ int uspi_read(uspi_handle* uspi, struct uspi_sample *samples, unsigned count)
     return total/sizeof(struct uspi_sample);
 }
 
+double convert(unsigned char* raw){
+    double double_val;
+    unsigned char *padcval;
+    int int_val;
 
-int uspi_read_wave(uspi_handle* uspi, double* data, unsigned count)
+    padcval=(unsigned char*)raw;
+    int_val=((padcval[0]<<16)&0xFF0000) |
+            ((padcval[1]<<8)&0xFF00) |
+            (padcval[2]&0xFF);
+    if(int_val&0x800000)//extend sign
+    int_val|=0xFF000000;
+
+    if(int_val)
+        double_val=int_val*5.0/16777216.0;
+    else
+        double_val=0.0;
+    return double_val;
+}
+
+int uspi_read_wave(uspi_handle* uspi, double* data0, double* data1, double* data2, unsigned count)
 {
     int ret;
     unsigned total=0;
-    static int a=0;
     struct uspi_sample sample;
-    while(total<count){
-        double double_val;
-        unsigned char *padcval;
-        int int_val;
+    unsigned ts, first_ts,miss=0;
 
-        ret = read( uspi->fdpipe[READ], (char *)&sample, sizeof(struct uspi_sample));
+    while(total<count){
+        double d0,d1,d2;
+
+        if(!miss)
+            ret = read( uspi->fdpipe[READ], (char *)&sample, sizeof(struct uspi_sample));
+        bread+=sizeof(struct uspi_sample);
         if(ret<0)
             break;
-        padcval=(unsigned char*)sample.data[0];
-        int_val=((padcval[0]<<16)&0xFF0000) |
-                ((padcval[1]<<8)&0xFF00) |
-                (padcval[2]&0xFF);
-        if(int_val&0x800000)//extend sign
-            int_val|=0xFF000000;
+        if ( sample.time == ts+1 || total==0)
+        {
+            ts=sample.time;
+            d0=convert(sample.data[0]);
+            d1=convert(sample.data[1]);
+            d2=convert(sample.data[2]);
+            miss=0;
+        } else {
+            //miss
+            miss=1;
+            d0 = d1 = d2 = -10.0;
+            ts += 1;
+        }
+        if(data0)
+            data0[total]=d0;
+        if(data1)
+            data1[total]=d1;
+        if(data2)
+            data2[total]=d2;
 
-        if(int_val)
-            double_val=int_val*5.0/16777216.0;
-        else
-            double_val=0.0;
-        data[total]=double_val;
+        if(total==0)
+            first_ts = ts;
         total++;
     }
-    a++;
-    return total;
+    return first_ts;
 }
 
 int uspi_start(uspi_handle* uspi,
@@ -212,7 +241,7 @@ int uspi_start(uspi_handle* uspi,
     unsigned ret;
     struct cmd_start_in params;
 
-
+    bwrite=bread=0;
     /* Open a set of pipes */
     if( _pipe( uspi->fdpipe, PIPE_SIZE, O_BINARY ) == -1 )
           return errno;
@@ -245,7 +274,8 @@ int uspi_getstat(uspi_handle* uspi,struct uspi_stat *stat)
 {
     if(!stat)
         return -1;
-    return usb_control_msg(uspi->dev, USB_TYPE_VENDOR|0x80, CMD_GETSTAT, 0, 0, (char*)stat, sizeof(struct uspi_stat), USB_TIMEOUT);
+    stat->BufLevel=bwrite-bread;
+    return usb_control_msg(uspi->dev, USB_TYPE_VENDOR|0x80, CMD_GETSTAT, 0, 0, (char*)stat, 12, USB_TIMEOUT);
 }
 
 int uspi_setspi(uspi_handle* uspi,
