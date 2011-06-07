@@ -19,4 +19,7 @@ clean :
 install:
 	@for d in $(TRGTS); do (cd $$d; echo "INSTALL $$d"; make install ); done
 
+restart:
+	tools/devcon restart "USB\Vid_e463&Pid_0007"
+
 .PHONY: $(TRGTS)
