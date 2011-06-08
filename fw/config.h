@@ -2,7 +2,7 @@
 #define _USPI_CFG_H_
 
 #define DEBUG
-#define TRACE_LEVEL TRACE_LEVEL_INFO /*DEBUG  INFO WARNING  ERROR NO_TRACE*/      
+#define TRACE_LEVEL TRACE_LEVEL_NO_TRACE /*DEBUG  INFO WARNING  ERROR NO_TRACE*/      
 
 
 //CLOCK
@@ -16,7 +16,7 @@
 #define PID						0x0007
 #define MANUFACTURER 			L"Tomek"
 #define PRODUCT 				L"Uspi"
-#define VERSION					L"Test_13_12"
+#define VERSION					L"Test_13_XX"
 
 //USB
 #define USB_EP_NUM				2
@@ -36,10 +36,10 @@
 #define UART_BUF_SIZE			50
 
 //PIO
-#define PIO_FIQ
+#define PIO_FIQ					TRUE
 
-//SPI
-#define SPI_FIQ
+//SPI							
+#define SPI_FIQ					TRUE
 #define	SPI_INIT_LB				FALSE
 #define SPI_INIT_SCBR			4
 

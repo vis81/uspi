@@ -1,6 +1,8 @@
 #include "AT91SAM7S64.H"                    
 #include "timer.h"
 #include "serial.h"
+#include "intc.h"
+
 volatile unsigned long timeval=0;
 volatile unsigned long realtime=0;
 
@@ -13,7 +15,7 @@ AT91_REG* ppivr=&AT91C_BASE_TC1->TC_SR;
 
 
 
-void tm_tc_start(U8 TimerID, unsigned isr, unsigned isr_mode ,unsigned clock,unsigned div)
+void tm_tc_start(U8 TimerID, irq_func isr, unsigned isr_mode ,unsigned clock,unsigned div)
 {
 	AT91S_TC	*pTimer=NULL;
 	U32 dummy;
@@ -33,14 +35,10 @@ void tm_tc_start(U8 TimerID, unsigned isr, unsigned isr_mode ,unsigned clock,uns
 	pTimer->TC_CMR = clock | AT91C_TC_CPCTRG; // set mode of the Timer Counter
 	pTimer->TC_CCR = AT91C_TC_CLKEN; // enable the clock
 
-	//* Open Timer 0 interrupt
-	pAIC->AIC_SMR[TimerID] = isr_mode;
-	pAIC->AIC_SVR[TimerID] = isr;
-
 	pTimer->TC_RC = div;
-	pTimer->TC_IER = AT91C_TC_CPCS;  //  IRQ enable CPC
-	pAIC->AIC_IECR = (1 << TimerID);  
 
+	intc_connect(TimerID,isr_mode, isr,FALSE);
+	pTimer->TC_IER = AT91C_TC_CPCS;  //  IRQ enable CPC
 	//* Start timer0
 	pTimer->TC_CCR = AT91C_TC_SWTRG ;
 
@@ -55,7 +53,7 @@ __irq void tm_rt_isr (void) {
 
 void tm_start_rt (void) {
 	realtime=0;
-	tm_tc_start(AT91C_ID_TC0, (unsigned)tm_rt_isr, 
+	tm_tc_start(AT91C_ID_TC0, tm_rt_isr, 
 		AT91C_AIC_SRCTYPE_INT_HIGH_LEVEL| AT91C_AIC_PRIOR_LOWEST,
 		AT91C_TC_CLKS_TIMER_DIV5_CLOCK, MCK/1024/RTT_FREQ);
 
@@ -78,7 +76,7 @@ void tm_start(unsigned freq,TM_DONE_CB cb)
 	tmCB=cb;
 	timeval=0;
 	gTimerEvent=TRUE;
-	tm_tc_start(AT91C_ID_TC1, (unsigned)tm_isr, 
+	tm_tc_start(AT91C_ID_TC1, tm_isr, 
 			AT91C_AIC_SRCTYPE_INT_HIGH_LEVEL| AT91C_AIC_PRIOR_HIGHEST,
 			AT91C_TC_CLKS_TIMER_DIV1_CLOCK,MCK/2/freq);
 }
@@ -97,7 +95,6 @@ BOOL tm_task(void)
 	//check which channels to wake-up
 	if(gTimerEvent)
 	{
-		//U32 time=tm_clrevent();
 		U32 time=timeval;
 		gTimerEvent=FALSE;
 		if(tmCB)

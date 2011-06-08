@@ -10,6 +10,7 @@
 #include "string.h"
 #include "trace.h"
 #include "assert.h"
+#include "intc.h"
 
 /*************************************************************************
 				PRIVATE VARS
@@ -96,11 +97,9 @@ void usb_init (const USB_DEVICE_DESCRIPTOR* pDevDesc,
 	AT91C_BASE_PMC->PMC_SCER = AT91C_PMC_UDP;
 	AT91C_BASE_PMC->PMC_PCER = (1 << AT91C_ID_UDP);
 
-	/* Global USB Interrupt: Mode and Vector with Highest Priority and Enable */
-	AT91C_BASE_AIC->AIC_SMR[AT91C_ID_UDP] = AT91C_AIC_SRCTYPE_INT_HIGH_LEVEL |
-	                          AT91C_AIC_PRIOR_LOWEST;
-	AT91C_BASE_AIC->AIC_SVR[AT91C_ID_UDP] = (unsigned long) usb_isr;
-	AT91C_BASE_AIC->AIC_IECR = (1 << AT91C_ID_UDP);
+	intc_connect(AT91C_ID_UDP,
+		AT91C_AIC_SRCTYPE_INT_HIGH_LEVEL | AT91C_AIC_PRIOR_LOWEST,
+		usb_isr, FALSE);
 
 	gUsbDesc.pUDP=AT91C_BASE_UDP;
 
@@ -196,7 +195,7 @@ BOOL usbisr_setcfg (U8 Configuration) {
 			U8 EpId=pEndpoint->bEndpointAddress&0xF;
 			usbisr_config_ep(pEndpoint);
 			usbisr_enable_ep(&gUsbDesc.EpDesc[EpId],TRUE);
-			usb_reset_ep(&gUsbDesc.EpDesc[EpId]);
+			usbisr_reset_ep(&gUsbDesc.EpDesc[EpId]);
 			pEndpoint=(const USB_ENDPOINT_DESCRIPTOR*)((U8*)pEndpoint+pEndpoint->bLength);
 		}
 		return TRUE;

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "pio.h"
 #include "assert.h"
+#include "intc.h"
 
 AT91PS_PIO gPIO = AT91C_BASE_PIOA;
 
@@ -32,13 +33,7 @@ void pio_init(){
 	*AT91C_PMC_PCER = (1 << AT91C_ID_PIOA);
 
 	pioCB=NULL;
-
-	AT91C_BASE_AIC->AIC_SMR[AT91C_ID_PIOA] = AT91C_AIC_SRCTYPE_INT_HIGH_LEVEL | 6;
-	AT91C_BASE_AIC->AIC_SVR[AT91C_ID_PIOA] = (unsigned long) pio_irq;
-#ifdef PIO_FIQ
-	pAIC->AIC_FFER=(1<<AT91C_ID_PIOA);
-#endif
-	AT91C_BASE_AIC->AIC_IECR = (1 << AT91C_ID_PIOA);
+	intc_connect(AT91C_ID_PIOA,AT91C_AIC_SRCTYPE_INT_HIGH_LEVEL,pio_irq, PIO_FIQ);
 }
 
 

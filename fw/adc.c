@@ -2,7 +2,6 @@
 #include "timer.h" 
 #include "pio.h"
 #include "spi.h"
-#include "fiq.h"
 #include "assert.h"
 #include "usb.h"
 
@@ -35,7 +34,6 @@ void pwm_stop(void);
 
 void adc_init()
 {
-	fiq_init();
 	pio_init();
 	spi_init();
 	//nSYNC/nPD

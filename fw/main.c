@@ -10,7 +10,7 @@
 #include "trace.h"
 #include "pio.h"
 #include "adc.h"
-
+#include "intc.h"
 
 
 const USB_DEVICE_DESCRIPTOR UsbDevDesc={
@@ -96,6 +96,8 @@ U32 cmd_dispatch(USB_SETUP_PACKET* pSetup);
 
 int main (void) {
   unsigned idle,lasttime=0;
+  
+  intc_init();
   
   uart_init();
   

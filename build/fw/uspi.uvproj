@@ -401,11 +401,6 @@
               <FilePath>..\..\fw\cmd.c</FilePath>
             </File>
             <File>
-              <FileName>fiq.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\fw\fiq.c</FilePath>
-            </File>
-            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\fw\main.c</FilePath>
@@ -414,16 +409,6 @@
               <FileName>pio.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\fw\pio.c</FilePath>
-            </File>
-            <File>
-              <FileName>retarget.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\fw\retarget.c</FilePath>
-            </File>
-            <File>
-              <FileName>serial.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\fw\serial.c</FilePath>
             </File>
             <File>
               <FileName>spi.c</FileName>
@@ -439,6 +424,21 @@
               <FileName>usb.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\fw\usb.c</FilePath>
+            </File>
+            <File>
+              <FileName>intc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\fw\intc.c</FilePath>
+            </File>
+            <File>
+              <FileName>retarget.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\fw\retarget.c</FilePath>
+            </File>
+            <File>
+              <FileName>serial.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\fw\serial.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -505,7 +505,7 @@
           <ListingPath>.\FLASH\</ListingPath>
           <HexFormatSelection>1</HexFormatSelection>
           <Merge32K>0</Merge32K>
-          <CreateBatchFile>1</CreateBatchFile>
+          <CreateBatchFile>0</CreateBatchFile>
           <BeforeCompile>
             <RunUserProg1>0</RunUserProg1>
             <RunUserProg2>0</RunUserProg2>
@@ -854,11 +854,6 @@
               <FilePath>..\..\fw\cmd.c</FilePath>
             </File>
             <File>
-              <FileName>fiq.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\fw\fiq.c</FilePath>
-            </File>
-            <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\fw\main.c</FilePath>
@@ -867,16 +862,6 @@
               <FileName>pio.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\fw\pio.c</FilePath>
-            </File>
-            <File>
-              <FileName>retarget.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\fw\retarget.c</FilePath>
-            </File>
-            <File>
-              <FileName>serial.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\fw\serial.c</FilePath>
             </File>
             <File>
               <FileName>spi.c</FileName>
@@ -892,6 +877,21 @@
               <FileName>usb.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\fw\usb.c</FilePath>
+            </File>
+            <File>
+              <FileName>intc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\fw\intc.c</FilePath>
+            </File>
+            <File>
+              <FileName>retarget.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\fw\retarget.c</FilePath>
+            </File>
+            <File>
+              <FileName>serial.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\fw\serial.c</FilePath>
             </File>
           </Files>
         </Group>

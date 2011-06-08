@@ -4,6 +4,7 @@
 #include "trace.h"
 #include "assert.h"
 #include "pio.h"
+#include "intc.h"
 
 
 typedef struct _SPILIST{
@@ -84,24 +85,15 @@ void spi_init ()
     //SPI CONTROL REGISTER
     AT91C_BASE_SPI->SPI_CR = (AT91C_SPI_SPIEN | AT91C_SPI_SWRST);	
     AT91C_BASE_SPI->SPI_CR = AT91C_SPI_SPIEN;
-    
-	// Configure mode and handler
-	AT91C_BASE_AIC->AIC_SMR[AT91C_ID_SPI] = AT91C_AIC_PRIOR_HIGHEST|
-											AT91C_AIC_SRCTYPE_INT_HIGH_LEVEL;
-	AT91C_BASE_AIC->AIC_SVR[AT91C_ID_SPI] = (unsigned int) spi_irq;
-	// Clear interrupt
-	AT91C_BASE_AIC->AIC_ICCR = 1 << AT91C_ID_SPI;
+
+	intc_connect(AT91C_ID_SPI ,
+		AT91C_AIC_PRIOR_HIGHEST | AT91C_AIC_SRCTYPE_INT_HIGH_LEVEL,
+		spi_irq, SPI_FIQ);
 
 	//Enable SPI IRQ
 	AT91C_BASE_SPI->SPI_IER=	AT91C_SPI_MODF	|	// (SPI) Mode Fault Error
 								AT91C_SPI_OVRES;// (SPI) Overrun Error Status
-#ifdef SPI_FIQ
-  AT91C_BASE_AIC->AIC_FFER=(1<<AT91C_ID_SPI);
-#endif
-	
-	//Enable interrupt
-	AT91C_BASE_AIC->AIC_IECR = 1 << AT91C_ID_SPI;
-	
+
 	gSpiDesc.XferSize=9;
 	gSpiDesc.loopback=SPI_INIT_LB;
 	gSpiDesc.SCBR=SPI_INIT_SCBR;
