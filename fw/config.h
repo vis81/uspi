@@ -43,4 +43,15 @@
 #define	SPI_INIT_LB				FALSE
 #define SPI_INIT_SCBR			4
 
+//PMC
+#define PMC_PLLR_Val	0x10191C05
+#define PMC_MCKR_Val	0x00000007
+#define PMC_MOR_Val		0x00000601
+
+//WatchDog
+#define WDT_MR_Val		0x00008000
+
+//Reset controller
+#define RSTC_MR_Val		0xA5000401
+
 #endif
