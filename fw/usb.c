@@ -421,31 +421,12 @@ U32 usbisr_write_ep(EP_DESC* pEpDesc,const U8* pData,U32 cnt,U16 evt)
 
 	pput=pEpDesc->pWPutData;
 	pend=pEpDesc->pWBufEnd;
-#if USB_WRITE_OPT
-	if (pput+cnt <= pend)
-	{
-		memcpy(pput, pData, cnt);
-		pput+=cnt;
-		if (pput==pend)
-			pput=pEpDesc->pWBuffer;
-	}
-	else
-	{
-		U32 nCopy = (U32)pend - (U32)pput;
-
-		memcpy(pput, pData, nCopy);
-		// continue from beginning of  buffer
-		memcpy(pEpDesc->pWBuffer, pData + nCopy, cnt - nCopy);
-		pput=pEpDesc->pWBuffer+cnt - nCopy;
-	}
-#else
 	while(cnt--)
 	{
 		*pput++=*pData++;
 		if(pput==pend)
 			pput=pEpDesc->pWBuffer;
 	}
-#endif
 	pEpDesc->pWPutData=pput;
 
 	if(pEpDesc->EpId==0)
@@ -471,24 +452,6 @@ void usbisr_writefifo (EP_DESC* pEpDesc)
 		pEpDesc->BytesReady+=cnt;
 		pEpDesc->BytesLeft-=cnt;
 
-#if USB_WRITE_OPT
-		if((U32)pend-(U32)pWData>=cnt)
-		{
-			while(cnt--)
-				*pfdr=*pWData++;
-		}else
-		{
-			U32 nCopy = (U32)pend - (U32)pWData;
-			cnt-=nCopy;
-			while(nCopy--)
-				*pfdr=*pWData++;	
-			pWData=pstart;
-			while(cnt--)
-				*pfdr=*pWData++;
-		}		
-		if(pWData==pend)
-			pWData=pstart;
-#else
 		
 		while(cnt--)
 		{
@@ -496,7 +459,7 @@ void usbisr_writefifo (EP_DESC* pEpDesc)
 			if(pWData==pend)
 				pWData=pstart;
 		}		
-#endif
+
 		pEpDesc->pWData=pWData;
 	}
 }
