@@ -4,24 +4,7 @@
 ; */
 
 #include "config.h"
-
-; Standard definitions of Mode bits and Interrupt (I & F) flags in PSRs
-
-Mode_USR        EQU     0x10
-Mode_FIQ        EQU     0x11
-Mode_IRQ        EQU     0x12
-Mode_SVC        EQU     0x13
-Mode_ABT        EQU     0x17
-Mode_UND        EQU     0x1B
-Mode_SYS        EQU     0x1F
-
-I_Bit           EQU     0x80            ; when I bit is set, IRQ is disabled
-F_Bit           EQU     0x40            ; when F bit is set, FIQ is disabled
-T_Bit           EQU     0x20			; THUMB mode bit
-
-; Internal Memory Base Addresses
-FLASH_BASE      EQU     0x00100000   
-RAM_BASE        EQU     0x00200000
+#include "arm.h"
 
 
 ISR_Stack_Size  EQU     (UND_Stack_Size + SVC_Stack_Size + ABT_Stack_Size + \
@@ -89,17 +72,6 @@ DAbt_Handler    B       DAbt_Handler
 Reset_Handler   
 				IMPORT init
 				BL	init
-; Copy Exception Vectors to Internal RAM
-
-                IF      :DEF:RAM_INTVEC
-                ADR     R8, Vectors         ; Source
-                LDR     R9, =RAM_BASE       ; Destination
-                LDMIA   R8!, {R0-R7}        ; Load Vectors 
-                STMIA   R9!, {R0-R7}        ; Store Vectors 
-                LDMIA   R8!, {R0-R7}        ; Load Handler Addresses 
-                STMIA   R9!, {R0-R7}        ; Store Handler Addresses
-                ENDIF
-
 
 ; Remap on-chip RAM to address 0
 

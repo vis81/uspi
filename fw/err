@@ -1,0 +1,43 @@
+In file included from start.S:3:0:
+config.h:4:0: warning: "DEBUG" redefined
+<command-line>:0:0: note: this is the location of the previous definition
+In file included from timer.h:3:0,
+                 from adc.c:2:
+config.h:4:0: warning: "DEBUG" redefined
+<command-line>:0:0: note: this is the location of the previous definition
+In file included from usb.h:3:0,
+                 from chanmgr.c:3:
+config.h:4:0: warning: "DEBUG" redefined
+<command-line>:0:0: note: this is the location of the previous definition
+In file included from timer.h:3:0,
+                 from cmd.c:3:
+config.h:4:0: warning: "DEBUG" redefined
+<command-line>:0:0: note: this is the location of the previous definition
+In file included from intc.c:2:0:
+config.h:4:0: warning: "DEBUG" redefined
+<command-line>:0:0: note: this is the location of the previous definition
+In file included from board.c:1:0:
+config.h:4:0: warning: "DEBUG" redefined
+<command-line>:0:0: note: this is the location of the previous definition
+In file included from usb.h:3:0,
+                 from main.c:5:
+config.h:4:0: warning: "DEBUG" redefined
+<command-line>:0:0: note: this is the location of the previous definition
+In file included from trace.h:44:0,
+                 from assert.h:60,
+                 from pio.c:4:
+config.h:4:0: warning: "DEBUG" redefined
+<command-line>:0:0: note: this is the location of the previous definition
+In file included from spi.h:4:0,
+                 from spi.c:3:
+config.h:4:0: warning: "DEBUG" redefined
+<command-line>:0:0: note: this is the location of the previous definition
+In file included from timer.h:3:0,
+                 from time.c:2:
+config.h:4:0: warning: "DEBUG" redefined
+<command-line>:0:0: note: this is the location of the previous definition
+In file included from usb.h:3:0,
+                 from usb.c:4:
+config.h:4:0: warning: "DEBUG" redefined
+<command-line>:0:0: note: this is the location of the previous definition
+make.EXE: *** No rule to make target `flash.lds', needed by `fw/flash_debug.elf'.  Stop.

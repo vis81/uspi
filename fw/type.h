@@ -16,7 +16,6 @@
 
 typedef void* HANDLE;
 typedef unsigned char   BOOL;
-typedef unsigned long  U32;
 typedef unsigned char U8;
 typedef unsigned short U16;
 typedef unsigned long U32;
@@ -30,5 +29,13 @@ typedef void *PVOID;
 typedef signed char  S8;
 typedef signed short S16;
 typedef signed int   S32;
+
+#ifdef __GNUC__
+#define __GCC_PACKED__ __attribute__ ((packed))
+#define __packed
+#else
+#define __GCC_PACKED__
+#endif
+
 
 #endif  /* __TYPE_H__ */

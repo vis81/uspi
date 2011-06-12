@@ -1,12 +1,14 @@
 #include "config.h"
 #include "AT91SAM7S64.H"                    /* AT91SAM7S64 definitions */
 
-//unsigned IRQ_Stack[IRQ_STACK_SIZE/4];
-//unsigned FIQ_Stack[FIQ_STACK_SIZE/4];
-//unsigned SVC_Stack[SVC_STACK_SIZE/4];
-//unsigned USR_Stack[USR_STACK_SIZE/4];
-//unsigned UND_Stack[UND_STACK_SIZE/4];
-//unsigned ABT_Stack[ABT_STACK_SIZE/4];
+#ifdef __GNUC__
+unsigned IRQ_Stack[IRQ_Stack_Size/4];
+unsigned FIQ_Stack[FIQ_Stack_Size/4];
+unsigned SVC_Stack[SVC_Stack_Size/4];
+unsigned USR_Stack[USR_Stack_Size/4];
+//unsigned UND_Stack[UND_Stack_Size/4];
+//unsigned ABT_Stack[ABT_Stack_Size/4];
+#endif
 
 
 
