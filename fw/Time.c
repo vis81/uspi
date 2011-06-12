@@ -5,6 +5,7 @@
 
 volatile unsigned long timeval=0;
 volatile unsigned long realtime=0;
+volatile int temp;
 
 volatile BOOL gTimerEvent;
 static TM_DONE_CB tmCB;
@@ -45,9 +46,10 @@ void tm_tc_start(U8 TimerID, irq_func isr, unsigned isr_mode ,unsigned clock,uns
 }
 
 
-__irq void tm_rt_isr (void) {
+void tm_rt_isr (void)
+{
 	realtime++;
-	*AT91C_AIC_EOICR = pTimer0->TC_SR;
+	temp=pTimer0->TC_SR;
 }
 	
 
@@ -60,7 +62,8 @@ void tm_start_rt (void) {
 }
 
 
-__irq void tm_isr (void) {
+void tm_isr (void)
+{
 #if CALC_USB_LATENCY
 	extern U32 usb_time;
 	if(AT91C_BASE_UDP->UDP_CSR[1]&AT91C_UDP_TXPKTRDY)
@@ -68,7 +71,7 @@ __irq void tm_isr (void) {
 #endif
 	timeval++;
 	gTimerEvent=TRUE;
-	*AT91C_AIC_EOICR = *ppivr; // signal VIC to end of interrupt activity
+	temp=*ppivr;
 }
 
 void tm_start(unsigned freq,TM_DONE_CB cb)

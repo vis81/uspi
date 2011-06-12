@@ -222,10 +222,8 @@ Vectors         LDR     PC,Reset_Addr
                 LDR     PC,PAbt_Addr
                 LDR     PC,DAbt_Addr
                 NOP                            ; Reserved Vector
-;               LDR     PC,IRQ_Addr
-                LDR     PC,[PC,#-0xF20]        ; Vector From AIC_IVR
-;               LDR     PC,FIQ_Addr
-                LDR     PC,[PC,#-0xF20]        ; Vector From AIC_FVR
+				LDR     PC,IRQ_Addr
+				LDR     PC,FIQ_Addr
 
 				IMPORT  SWI_Handler
 
@@ -242,8 +240,6 @@ Undef_Handler   B       Undef_Handler
 SWI_B     B       SWI_Handler
 PAbt_Handler    B       PAbt_Handler
 DAbt_Handler    B       DAbt_Handler
-IRQ_Handler     B       IRQ_Handler
-FIQ_Handler     B       FIQ_Handler
 
 
 ; Reset Handler
@@ -430,6 +426,18 @@ __user_initial_stackheap
                 LDR     R3, = Stack_Mem
                 BX      LR
                 ENDIF
+IRQ_Handler
+				IMPORT irqc
+				STMDB	R13!, {R0-R3,R12,R14}
+				BL 		irqc
+				LDMIA	R13!, {R0-R3,R12,R14}
+				SUBS	PC, R14, #4	
 
+FIQ_Handler
+				IMPORT	fiqc
+				STMDB	R13!, {R0-R3,R14}
+				BL 		fiqc
+				LDMIA	R13!, {R0-R3,R14}
+				SUBS	PC, R14, #4	
 
                 END

@@ -46,7 +46,7 @@ void usbisr_writefifo (EP_DESC* pEpDesc);
 U32 usbisr_readreq (EP_DESC* pEpDesc);
 U32 usbisr_writereq (EP_DESC* pEpDesc);
 void usbisr_setupreq (EP_DESC* pEpDesc);
-void usb_isr (void) __irq;
+void usb_isr (void);
 
 
 /*************************************************************************
@@ -553,7 +553,8 @@ U32 usbisr_reset_ep (EP_DESC* pEpDesc)
 /*
  *  USB Interrupt Service Routine
  */
-void usb_isr (void) __irq {
+void usb_isr (void)
+{
 	U32 isr, csr, n;  
 	static AT91PS_UDP pUDP = AT91C_BASE_UDP;
 	static AT91_REG* UDP_ICR=&AT91C_BASE_UDP->UDP_ICR;
@@ -638,7 +639,6 @@ void usb_isr (void) __irq {
 		}
 	}
 	
-	*AT91C_AIC_EOICR = 0;                     /* End of Interrupt */
 }
 
 

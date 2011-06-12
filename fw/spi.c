@@ -63,7 +63,6 @@ __irq
 	}
 	if(status)
 		AT91C_BASE_AIC->AIC_ICCR = (1 << AT91C_ID_SPI);
-	*AT91C_AIC_EOICR = 0;                     /* End of Interrupt */
 }
 
 

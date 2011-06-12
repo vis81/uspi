@@ -25,7 +25,6 @@ __irq
 		pioCB(status,value);
 		AT91C_BASE_AIC->AIC_ICCR = (1 << AT91C_ID_PIOA);
 	}
-	*AT91C_AIC_EOICR = 0;                     /* End of Interrupt          */
 }
 
 void pio_init(){

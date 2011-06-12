@@ -2,7 +2,7 @@
 #define INTC_H
 #include "type.h"
 
-typedef void (*irq_func) (void) __irq;
+typedef void (*irq_func) (void);
 
 
 void intc_init(void);

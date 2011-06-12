@@ -1,5 +1,6 @@
 #include "intc.h"
 #include "config.h"
+#include "assert.h"
 #include "AT91SAM7S64.H"                    /* AT91SAM7S64 definitions */
 
 typedef struct _INTCDESC{
@@ -9,10 +10,12 @@ typedef struct _INTCDESC{
 
 INTCDESC gIntc;
 
-void irqc (irq_func func)
+void irqc ()
 {
+	int irqline=*AT91C_AIC_ISR;
 	((void (*) (void))(*AT91C_AIC_IVR))();
-	gIntc.IRQ[*AT91C_AIC_ISR]++;
+	//SANITY_CHECK(irqline<32);
+	//gIntc.IRQ[irqline]++;	
 	*AT91C_AIC_EOICR=0;
 }
 
@@ -21,7 +24,7 @@ void irqc (irq_func func)
 void spi_irq (void);
 void pio_irq (void);
 
-void fiqc (void) __irq
+void fiqc (void)
 {
 #ifdef PIO_FIQ
 	pio_irq();
