@@ -1,5 +1,5 @@
 PROG = uspi
-TRGTS = app
+TRGTS = app fw
 APPS = uspi_conv uspi_check libuspi uspi_test labview
 
 $(PROG): $(TRGTS)
@@ -21,5 +21,8 @@ install:
 
 restart:
 	tools/devcon restart "USB\Vid_e463&Pid_0007"
+
+program_jlink:
+	sam-ba.exe  "\\jlink\\ARM0" AT91SAM7S64-EK scripts/prog_flash.tcl 1>program.log 2>&1
 
 .PHONY: $(TRGTS)

@@ -58,19 +58,19 @@ ASM_OBJECTS = start.o
 #		Rules
 #-------------------------------------------------------------------------------
 
-all: $(BINDIR) $(OBJDIR) $(BINDIR)/$(TARGET).elf
+all: $(OBJDIR) $(OBJDIR)/$(TARGET).elf
 
 $(BINDIR) $(OBJDIR):
-	mkdir $@
+	mkdir -p $@
 
 
 C_OBJECTS := $(addprefix $(OBJDIR)/, $(C_OBJECTS))
 ASM_OBJECTS := $(addprefix $(OBJDIR)/, $(ASM_OBJECTS))
 
-$(BINDIR)/$(TARGET).elf : $(ASM_OBJECTS) $(C_OBJECTS) $(LD_SCRIPT)
-	$(CC) $(LDFLAGS) -T$(LD_SCRIPT) -Wl,-Map,$(BINDIR)/$(TARGET).map -o $(BINDIR)/$(TARGET).elf $(ASM_OBJECTS) $(C_OBJECTS)
-	$(OBJCOPY) -O binary $@ $(BINDIR)/$(TARGET).bin
-	$(SIZE) $(ASM_OBJECTS) $(C_OBJECTS) $(BINDIR)/$(TARGET).elf
+$(OBJDIR)/$(TARGET).elf : $(ASM_OBJECTS) $(C_OBJECTS) $(LD_SCRIPT)
+	$(CC) $(LDFLAGS) -T$(LD_SCRIPT) -Wl,-Map,$(OBJDIR)/$(TARGET).map -o $(OBJDIR)/$(TARGET).elf $(ASM_OBJECTS) $(C_OBJECTS)
+	$(OBJCOPY) -O binary $@ $(OBJDIR)/$(TARGET).bin
+	$(SIZE) $(ASM_OBJECTS) $(C_OBJECTS) $(OBJDIR)/$(TARGET).elf
 
 $(C_OBJECTS): $(OBJDIR)/%.o: $(SRCDIR)/%.c  $(SRCDIR)/*.h
 	$(CC) $(CFLAGS) -c -o $@ $<
@@ -80,4 +80,7 @@ $(ASM_OBJECTS): $(OBJDIR)/%.o: $(SRCDIR)/%.S $(SRCDIR)/*.h
 
 
 clean:
-	-rm -f $(OBJDIR)/*.o $(BINDIR)/*.bin $(BINDIR)/*.elf
+	-rm -rf $(OBJDIR)
+
+install: $(BINDIR)
+	@cp $(OBJDIR)/$(TARGET).bin $(BINDIR)
