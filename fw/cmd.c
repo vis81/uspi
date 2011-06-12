@@ -24,7 +24,7 @@ U32 cmd_setspi(USB_SETUP_PACKET* pSetup);
 
 
 
-cmd_cb commands[NUM_CMDS]={cmd_getmips,cmd_start,cmd_stop,cmd_getstat,cmd_setspi};
+const cmd_cb commands[NUM_CMDS]={cmd_getmips,cmd_start,cmd_stop,cmd_getstat,cmd_setspi};
 
 
 U32 cmd_dispatch(USB_SETUP_PACKET* pSetup)

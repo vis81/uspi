@@ -84,7 +84,7 @@ const USB_STRING_DESCRIPTOR sProduct={2+sizeof(PRODUCT),USB_STRING_DESCRIPTOR_TY
 const USB_STRING_DESCRIPTOR sManufacturer={2+sizeof(MANUFACTURER),USB_STRING_DESCRIPTOR_TYPE,MANUFACTURER};
 const USB_STRING_DESCRIPTOR sVersion={2+sizeof(VERSION),USB_STRING_DESCRIPTOR_TYPE,VERSION};
 
-const void* strings[]={&str_lang_table,&sManufacturer,&sProduct,&sVersion,0};
+const USB_STRING_DESCRIPTOR* strings[]={&str_lang_table,&sManufacturer,&sProduct,&sVersion,0};
 
 S32 calibrate=-1;
 U32 freemips=0;
@@ -99,7 +99,7 @@ int main (void) {
   
   intc_init();
   
-  uart_init();
+//  uart_init();
   
   adc_init();
   

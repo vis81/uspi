@@ -71,9 +71,6 @@ void spi_init ()
 {
 	gSpiDesc.SpiID=0;
 
-	// Disable the interrupt first
-	AT91C_BASE_AIC->AIC_IDCR = 1 << AT91C_ID_SPI;
-
 	//Enable peripheral clock
 	AT91C_BASE_PMC->PMC_PCER = (1<<AT91C_ID_SPI);
 	

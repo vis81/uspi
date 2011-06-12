@@ -9,7 +9,7 @@
 /*************************************************************************
 				PRIVATE VARS
 **************************************************************************/
-static U32 nDRDY_mask[3]={ADC_nDRDY0,ADC_nDRDY1,ADC_nDRDY2};
+const static U32 nDRDY_mask[3]={ADC_nDRDY0,ADC_nDRDY1,ADC_nDRDY2};
 ADCDESC gAdcDesc;
 
 
