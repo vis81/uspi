@@ -182,8 +182,8 @@ typedef __packed union {
   __packed struct {
     U8 L;
     U8 H;
-  } WB;
-} WORD_BYTE;
+  } __GCC_PACKED__ WB;
+} __GCC_PACKED__ WORD_BYTE;
 
 /* bmRequestType Definition */
 typedef __packed union _REQUEST_TYPE {
@@ -191,9 +191,9 @@ typedef __packed union _REQUEST_TYPE {
     U8 Recipient : 5;
     U8 Type      : 2;
     U8 Dir       : 1;
-  } BM;
+  } __GCC_PACKED__ BM;
   U8 B;
-} REQUEST_TYPE;
+} __GCC_PACKED__ REQUEST_TYPE;
 
 /* USB Default Control Pipe Setup Packet */
 typedef __packed struct _USB_SETUP_PACKET {
@@ -203,7 +203,7 @@ typedef __packed struct _USB_SETUP_PACKET {
   WORD_BYTE    wIndex;
   U16         wLength;
   U8			Payload[MAX_EP0_PAYLOAD_SIZE];
-} USB_SETUP_PACKET;
+} __GCC_PACKED__ USB_SETUP_PACKET;
 
 
 /* USB Standard Device Descriptor */
@@ -222,7 +222,7 @@ typedef __packed struct _USB_DEVICE_DESCRIPTOR {
   U8  iProduct;
   U8  iSerialNumber;
   U8  bNumConfigurations;
-} USB_DEVICE_DESCRIPTOR;
+} __GCC_PACKED__ USB_DEVICE_DESCRIPTOR;
 
 /* USB Standard Configuration Descriptor */
 typedef __packed struct _USB_CONFIGURATION_DESCRIPTOR {
@@ -234,7 +234,7 @@ typedef __packed struct _USB_CONFIGURATION_DESCRIPTOR {
   U8  iConfiguration;
   U8  bmAttributes;
   U8  MaxPower;
-} USB_CONFIGURATION_DESCRIPTOR;
+} __GCC_PACKED__ USB_CONFIGURATION_DESCRIPTOR;
 
 /* USB Standard Interface Descriptor */
 typedef __packed struct _USB_INTERFACE_DESCRIPTOR {
@@ -247,7 +247,7 @@ typedef __packed struct _USB_INTERFACE_DESCRIPTOR {
   U8  bInterfaceSubClass;
   U8  bInterfaceProtocol;
   U8  iInterface;
-} USB_INTERFACE_DESCRIPTOR;
+} __GCC_PACKED__ USB_INTERFACE_DESCRIPTOR;
 
 /* USB Standard Endpoint Descriptor */
 typedef __packed struct _USB_ENDPOINT_DESCRIPTOR {
@@ -257,7 +257,7 @@ typedef __packed struct _USB_ENDPOINT_DESCRIPTOR {
   U8  bmAttributes;
   U16  wMaxPacketSize;
   U8  bInterval;
-} USB_ENDPOINT_DESCRIPTOR;
+} __GCC_PACKED__ USB_ENDPOINT_DESCRIPTOR;
 
 
 /* USB String Descriptor */
@@ -265,13 +265,13 @@ typedef __packed struct _USB_STRING_DESCRIPTOR {
   U8  bLength;
   U8  bDescriptorType;
   U16  bString[20];
-} USB_STRING_DESCRIPTOR;
+} __GCC_PACKED__ USB_STRING_DESCRIPTOR;
 
 /* USB Common Descriptor */
 typedef __packed struct _USB_COMMON_DESCRIPTOR {
   U8  bLength;
   U8  bDescriptorType;
-} USB_COMMON_DESCRIPTOR;
+} __GCC_PACKED__ USB_COMMON_DESCRIPTOR;
 
 
 typedef U32 (*EP_WriteCB) (HANDLE h);
@@ -342,9 +342,53 @@ void usb_init (const USB_DEVICE_DESCRIPTOR* pDevDesc,
 void usb_connect (BOOL con);
 BOOL usb_task(void);
 EP_DESC* usb_open(U8 EpId);
+#ifdef __GNUC__
+static inline U32 usb_reset_ep(EP_DESC* pEpDesc)
+{
+	U32 ret;
+	asm volatile (
+		"mov r0, %1 \n\t" \
+		"swi 2    \n\t" \
+		"mov %0, r0 \n\t" \
+		: "=r" (ret)
+		: "r"  (pEpDesc)
+		:"r0", "r1", "r2", "r3", "memory", "cc"
+	);
+	return ret;
+}
+
+static inline void usb_flush(EP_DESC* pEpDesc)
+{
+	asm volatile (
+		"mov r0, %0 \n\t" \
+		"swi 3    \n\t" \
+		: : "r" (pEpDesc)
+		:"r0", "r1", "r2", "r3", "memory", "cc"
+	);
+}
+
+static inline U32 usb_write(EP_DESC* pEpDesc,const U8* pData,U32 cnt,U16 evt)
+{
+	U32 ret;
+	asm volatile (
+		"mov r0, %1 \n\t" \
+		"mov r1, %2 \n\t" \
+		"mov r2, %3 \n\t" \
+		"mov r3, %4 \n\t" \
+		"swi 1    \n\t" \
+		"mov %0, r0 \n\t" \
+		: "=r" (ret)
+		: "r"  (pEpDesc), "r" (pData), "r" (cnt), "r" (evt) 
+		:"r0", "r1", "r2", "r3","memory", "cc"
+	);
+	return ret;
+}
+
+#else
 U32 __swi(1) usb_write(EP_DESC* pEpDesc,const U8* pData,U32 cnt,U16 evt);
 U32 __swi(2) usb_reset_ep (EP_DESC* pEpDesc);
 void __swi(3) usb_flush(EP_DESC* pEpDesc);
+#endif
 
 
 #endif
