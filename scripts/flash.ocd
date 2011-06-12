@@ -1,0 +1,6 @@
+flash probe 0
+flash write_bank 0 out/fw/flash.bin 0x0
+verify_image out/fw/flash.bin 0x100000
+reset run
+sleep 10
+shutdown
