@@ -37,12 +37,10 @@ void spiisr_start(void);
 
 __inline void spiisr_select(U8 SpiId)
 {
-	U32 MR=AT91C_BASE_SPI->SPI_MR;
-	//U32 mask=(SpiId<<16);
-	//U32 mask=spimask[SpiId];
+	U32 MR=*AT91C_SPI_MR;
 	MR&=~AT91C_SPI_PCS;
 	MR|=spimask[SpiId];
-	AT91C_BASE_SPI->SPI_MR=MR;
+	*AT91C_SPI_MR=MR;
 
 }
 
@@ -51,18 +49,16 @@ void spi_irq (void)
 __irq 
 #endif
 {
-	U32 status=AT91C_BASE_SPI->SPI_SR&AT91C_BASE_SPI->SPI_IMR;
+	U32 status=*AT91C_SPI_SR&*AT91C_SPI_IMR;
 	
 	SANITY_CHECK(!(status&(AT91C_SPI_MODF|AT91C_SPI_OVRES)));
 	if(status&AT91C_SPI_ENDRX)
 	{
 		gSpiDesc.IRQ++;
 		gSpiDesc.BytesDone+=gSpiDesc.XferSize;
-		AT91C_BASE_SPI->SPI_IDR=AT91C_SPI_ENDRX;// (SPI) End of Receiver Transfer
+		*AT91C_SPI_IDR=AT91C_SPI_ENDRX;// (SPI) End of Receiver Transfer
 		gSpiDesc.DoneCb();
 	}
-	if(status)
-		AT91C_BASE_AIC->AIC_ICCR = (1 << AT91C_ID_SPI);
 }
 
 
@@ -145,8 +141,8 @@ void spi_setup_xfer(U8 Spi, U8 xfersize, SPI_DONE_CB cb)
 U32 spiisr_read(U8* RxData) 
 { //SWI
 	static U8 TxData[]={0x12,0x34,0x56,0x78,0x90,0xAA,0xBB,0xCC,0xDD};
-	AT91C_BASE_SPI->SPI_RPR = (unsigned int) RxData;
-	AT91C_BASE_SPI->SPI_TPR = (unsigned int) TxData;
+	*AT91C_SPI_RPR = (unsigned int) RxData;
+	*AT91C_SPI_TPR = (unsigned int) TxData;
 	spiisr_start();
 	return 1; 
 }
@@ -155,11 +151,10 @@ U32 spiisr_read(U8* RxData)
 void spiisr_start() 
 {
 	spiisr_select(gSpiDesc.SpiID);
-	AT91C_BASE_SPI->SPI_RCR = gSpiDesc.XferSize;
-	AT91C_BASE_SPI->SPI_TCR = gSpiDesc.XferSize;
-	AT91C_BASE_SPI->SPI_IER=  AT91C_SPI_ENDRX;	// (SPI) End of Receiver Transfer
-	AT91C_BASE_SPI->SPI_PTCR = AT91C_PDC_RXTEN;
-	AT91C_BASE_SPI->SPI_PTCR = AT91C_PDC_TXTEN;
+	*AT91C_SPI_RCR = gSpiDesc.XferSize;
+	*AT91C_SPI_TCR = gSpiDesc.XferSize;
+	*AT91C_SPI_IER=  AT91C_SPI_ENDRX;	// (SPI) End of Receiver Transfer
+	*AT91C_SPI_PTCR = AT91C_PDC_RXTEN | AT91C_PDC_TXTEN;
 }
 
 

@@ -22,8 +22,8 @@ ASFLAGS += $(CFLAGS) -D__ASSEMBLY__
 LDFLAGS += $(ALLFLAGS) -nostartfiles -Wl,--gc-sections
 
 ifeq ($(DEBUG),true)
-CFLAGS += -O3 
-# -DDEBUG
+#CFLAGS += -O0 -DLOWFREQ
+CFLAGS += -O3
 ifeq ($(MEMORY),ram)
 TARGET=ram_debug
 else

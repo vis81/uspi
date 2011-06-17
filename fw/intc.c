@@ -26,11 +26,14 @@ void pio_irq (void);
 
 void fiqc (void)
 {
+	unsigned pending=*AT91C_AIC_IPR;
 #ifdef PIO_FIQ
-	pio_irq();
+	if(pending&(1<<AT91C_ID_PIOA))
+		pio_irq();
 #endif
 #ifdef SPI_FIQ
-	spi_irq();
+	if(pending&(1<<AT91C_ID_SPI))
+		spi_irq();
 #endif
 }
 

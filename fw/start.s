@@ -39,20 +39,16 @@ dabtHandler:
 /// handler, as defined in the AIC. Supports interrupt nesting.
 //------------------------------------------------------------------------------
 irqHandler:
-		sub			lr, lr, #4
-		stmfd		sp!, {r0-r3,r12,lr}
-		ldr			r0, =irqc
-		mov			r14, pc
-		bx			r0
-		ldmia		sp!, {r0-r3,r12,pc}^
+		STMDB	R13!, {R0-R3,R12,R14}
+		BL 		irqc
+		LDMIA	R13!, {R0-R3,R12,R14}
+		SUBS	PC, R14, #4
 
 fiqHandler:
-		sub			lr, lr, #4
-		stmfd		sp!, {r0-r3,lr}
-		ldr			r0, =fiqc
-		mov			r14, pc
-		bx			r0
-		ldmia		sp!, {r0-r3,pc}^
+		STMDB	R13!, {R0-R3,R14}
+		BL 		fiqc
+		LDMIA	R13!, {R0-R3,R14}
+		SUBS	PC, R14, #4
 
 
 

@@ -150,7 +150,12 @@ void pwm_init()
 {
 	// Enable PWMC peripheral clock
 	AT91C_BASE_PMC->PMC_PCER = 1 << AT91C_ID_PWMC;
-	pPwm->PWMC_CH[0].PWMC_CMR=	AT91C_PWMC_CPRE&0x3 | 	//MCK/64
+	pPwm->PWMC_CH[0].PWMC_CMR=	
+#ifdef LOWFREQ
+					AT91C_PWMC_CPRE&0x4 | 	//MCK/16
+#else
+					AT91C_PWMC_CPRE&0x3 | 	//MCK/8
+#endif
 					AT91C_PWMC_CALG&0 | 	//left aligned
 					AT91C_PWMC_CPOL ; 		//starts from high
 	pPwm->PWMC_CH[0].PWMC_CPRDR=192;//clock multiplier

@@ -17,13 +17,12 @@ void pio_irq (void)
 __irq
 #endif
 {
-	U32 status=gPIO->PIO_ISR&gPIO->PIO_IMR;
+	U32 status=*AT91C_PIOA_ISR&*AT91C_PIOA_IMR;
 	if (status) 
 	{
-		U32 value=gPIO->PIO_PDSR&gPIO->PIO_IMR;
+		U32 value=*AT91C_PIOA_PDSR&status;
 		SANITY_CHECK(pioCB);
 		pioCB(status,value);
-		AT91C_BASE_AIC->AIC_ICCR = (1 << AT91C_ID_PIOA);
 	}
 }
 

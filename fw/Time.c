@@ -64,14 +64,11 @@ void tm_start_rt (void) {
 
 void tm_isr (void)
 {
-#if CALC_USB_LATENCY
-	extern U32 usb_time;
-	if(AT91C_BASE_UDP->UDP_CSR[1]&AT91C_UDP_TXPKTRDY)
-		usb_time++;
-#endif
 	timeval++;
 	gTimerEvent=TRUE;
-	temp=*ppivr;
+	temp=pTimer1->TC_SR;
+	pTimer1->TC_CCR = AT91C_TC_CLKDIS;
+	pTimer1->TC_IDR = 0xFFFFFFFF;
 }
 
 void tm_start(unsigned freq,TM_DONE_CB cb)

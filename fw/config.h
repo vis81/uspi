@@ -22,7 +22,6 @@
 #define USB_EP_NUM				2
 #define USB_EP0_BUFSIZE			64
 #define MAX_EP0_PAYLOAD_SIZE	64
-#define CALC_USB_LATENCY		FALSE
 #ifdef FLASH
 #define USB_EP_BUFSIZE			64*200
 #else

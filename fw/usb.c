@@ -20,11 +20,6 @@ static U8 BulkEpBuf[USB_EP_NUM-1][USB_EP_BUFSIZE];
 static U8 CtrlEpBuf[USB_EP0_BUFSIZE];
 volatile BOOL gUsbEvent;
 
-#if CALC_USB_LATENCY
-U32 usb_time;
-U32 usb_maxtime;
-#endif
-
 
 /*************************************************************************
 				PRIVATE FUNCTIONS DECLARATION
@@ -519,8 +514,6 @@ U32 usbisr_reset_ep (EP_DESC* pEpDesc)
 void usb_isr (void)
 {
 	U32 isr, csr, n;  
-	static AT91PS_UDP pUDP = AT91C_BASE_UDP;
-	static AT91_REG* UDP_ICR=&AT91C_BASE_UDP->UDP_ICR;
 	static AT91_REG* UDP_CSR[4]={	&AT91C_BASE_UDP->UDP_CSR[0],
 						&AT91C_BASE_UDP->UDP_CSR[1],
 						&AT91C_BASE_UDP->UDP_CSR[2],
@@ -528,28 +521,28 @@ void usb_isr (void)
 						};
 	
 	gUsbDesc.IRQ++;
-	isr=pUDP->UDP_ISR;
+	isr=*AT91C_UDP_ISR;
 	{
 		/* End of Bus Reset Interrupt */
 		if (isr & AT91C_UDP_ENDBUSRES) {
 			usbisr_reset();
-			*UDP_ICR = AT91C_UDP_ENDBUSRES;
+			*AT91C_UDP_ICR = AT91C_UDP_ENDBUSRES;
 		}
 		/* USB Suspend Interrupt */
 		if (isr & AT91C_UDP_RXSUSP) {
-			*UDP_ICR = AT91C_UDP_RXSUSP;
+			*AT91C_UDP_ICR = AT91C_UDP_RXSUSP;
 		}
 		/* USB Resume Interrupt */
 		if (isr & AT91C_UDP_RXRSM) {
-			*UDP_ICR = AT91C_UDP_RXRSM;
+			*AT91C_UDP_ICR = AT91C_UDP_RXRSM;
 		}
 		/* External Resume Interrupt */
 		if (isr & AT91C_UDP_EXTRSM) {
-			*UDP_ICR = AT91C_UDP_EXTRSM;
+			*AT91C_UDP_ICR = AT91C_UDP_EXTRSM;
 		}
 		/* Start of Frame Interrupt */
 		if (isr & AT91C_UDP_SOFINT) {
-			*UDP_ICR = AT91C_UDP_SOFINT;
+			*AT91C_UDP_ICR = AT91C_UDP_SOFINT;
 		}
 
 		/* Endpoint Interrupts */
@@ -576,15 +569,6 @@ void usb_isr (void)
 				/* Data Packet Sent Interrupt */
 				if (csr & AT91C_UDP_TXCOMP) 
 				{
-#if CALC_USB_LATENCY
-				
-					if(usb_time>usb_maxtime)
-					{
-						usb_maxtime=usb_time;
-						TRACE_INFO("USB latency=%u\n",usb_maxtime);
-					}
-					usb_time=0;
-#endif
 					pEpDesc->TxIRQ++;
 					usbisr_writereq(pEpDesc);
 					CLEAR_CSR(pEpDesc->UDP_CSR,AT91C_UDP_TXCOMP);
@@ -597,7 +581,7 @@ void usb_isr (void)
 						usbisr_stall_ep (pEpDesc,FALSE);
 					*UDP_CSR[n] &= ~AT91C_UDP_STALLSENT;
 				}
-				*UDP_ICR = 1 << n;
+				*AT91C_UDP_ICR = 1 << n;
 			}
 		}
 	}
