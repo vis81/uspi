@@ -44,7 +44,7 @@ void adc_init()
 	pio_set_input(ADC_nDRDY1,FALSE,FALSE);
 	pio_set_input(ADC_nDRDY2,FALSE,FALSE);
 	gAdcDesc.state=ADC_IDLE;
-#ifdef DEBUG
+#if PWM_DEBUG
 	pwm_init();
 #endif
 }
@@ -75,7 +75,7 @@ void adc_sync_cb(U32 time)
 	pio_start(nDRDY_mask[gAdcDesc.drdy],adc_pio_cb);
 	pio_set(ADC_nSYNC);	
 	
-#ifdef DEBUG
+#if PWM_DEBUG
 	pwm_start();
 #endif
 }
@@ -120,7 +120,7 @@ void adc_stop(void)
 	gAdcDesc.buf_wr=gAdcDesc.buf_rd=0;
 	gAdcDesc.cb=NULL;
 	gAdcDesc.state=ADC_IDLE;
-#ifdef DEBUG
+#if PWM_DEBUG
 	pwm_stop();
 #endif
 }
@@ -142,7 +142,7 @@ BOOL adc_task(void)
 	return FALSE;
 }
 
-#ifdef DEBUG
+#if PWM_DEBUG
 
 AT91PS_PWMC pPwm=(AT91PS_PWMC)AT91C_BASE_PWMC;
 

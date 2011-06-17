@@ -2,6 +2,7 @@
 #define _USPI_CFG_H_
 
 #define DEBUG
+#define PWM_DEBUG TRUE
 #define TRACE_LEVEL TRACE_LEVEL_NO_TRACE /*DEBUG  INFO WARNING  ERROR NO_TRACE*/      
 
 
