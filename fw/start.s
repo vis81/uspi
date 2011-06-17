@@ -51,7 +51,6 @@ fiqHandler:
 		SUBS	PC, R14, #4
 
 
-
 swiHandler:
 		stmfd	sp!, {r12, lr}		// Store R12, LR
 		MRS 	R12, SPSR		//Get SPSR
