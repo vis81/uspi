@@ -1,3 +1,8 @@
+arm7_9 dcc_downloads enable
+init
+reset init
+arm7_9 fast_memory_access enable
+
 flash probe 0
 flash write_bank 0 out/fw/flash.bin 0x0
 verify_image out/fw/flash.bin 0x100000
