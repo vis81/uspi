@@ -1,5 +1,5 @@
 TARGET = uspi.dll
-OBJS = uspi.o
+OBJS = uspi.o miniscope.o
 CFLAGS = -shared
 LDFLAGS = -Wl,--out-implib,libuspi.a
 INCLUDES = -I. -I../../libusb-win32-bin-1.2.1.0/include

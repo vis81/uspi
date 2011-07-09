@@ -12,6 +12,13 @@ unsigned USR_Stack[USR_Stack_Size/4];
 
 
 
+#if USPI_PLL_CLK<160000000
+#define PMC_PLLR_Val	(((USPI_PLL_USBDIV-1)&0x3)<<28) | (((USPI_PLL_MUL-1)&0x7FF)<<16) | ((USPI_PLL_COUNT&0x3F)<<8) | USPI_PLL_DIV
+#elif  USPI_PLL_CLK<220000000
+#define PMC_PLLR_Val	(((USPI_PLL_USBDIV-1)&0x3)<<28) | (((USPI_PLL_MUL-1)&0x7FF)<<16) | ((USPI_PLL_COUNT&0x3F)<<8) | USPI_PLL_DIV | 2<<14
+#else
+#error "too much"
+#endif
 
 /* Low level init */
 void init()
@@ -29,11 +36,11 @@ void init()
 	if(PMC_MOR_Val & AT91C_PMC_MOSCS)
 		while(!(AT91C_BASE_PMC->PMC_SR & AT91C_PMC_MOSCS));
 	//Setup the PLL
-	if(PMC_PLLR_Val & PMC_MUL) {
-		AT91C_BASE_PMC->PMC_PLLR = PMC_PLLR_Val;
-		//Wait until PLL is stabilized
-		while(!(AT91C_BASE_PMC->PMC_SR & AT91C_PMC_LOCK));
-	}
+#if USPI_PLL_MUL
+	AT91C_BASE_PMC->PMC_PLLR = PMC_PLLR_Val;
+	//Wait until PLL is stabilized
+	while(!(AT91C_BASE_PMC->PMC_SR & AT91C_PMC_LOCK));
+#endif
 	// Select Clock
 	if ( (PMC_MCKR_Val & AT91C_PMC_CSS) == AT91C_PMC_CSS_MAIN_CLK ) // Main Clock Selected
 		AT91C_BASE_PMC->PMC_MCKR = PMC_MCKR_Val & AT91C_PMC_CSS;

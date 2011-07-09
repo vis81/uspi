@@ -67,8 +67,7 @@ $_TARGETNAME configure -event reset-init {
 	mww 0xfffffc20 0x00000601
 	sleep 10
 	# CKGR_PLLR: 96.1097 MHz
-	#mww 0xfffffc2c 0x00481c0e
-	mww 0xfffffc2c 0x10191C05
+	mww 0xfffffc2c 0x107C1C18
 	sleep 10
 	# PMC_MCKR : MCK = PLL / 2 ~= 48 MHz
 	mww 0xfffffc30 0x00000007

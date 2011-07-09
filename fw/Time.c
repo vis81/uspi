@@ -57,7 +57,7 @@ void tm_start_rt (void) {
 	realtime=0;
 	tm_tc_start(AT91C_ID_TC0, tm_rt_isr, 
 		AT91C_AIC_SRCTYPE_INT_HIGH_LEVEL| AT91C_AIC_PRIOR_LOWEST,
-		AT91C_TC_CLKS_TIMER_DIV5_CLOCK, MCK/1024/RTT_FREQ);
+		AT91C_TC_CLKS_TIMER_DIV5_CLOCK, USPI_MCK/1024/RTT_FREQ);
 
 }
 
@@ -78,7 +78,7 @@ void tm_start(unsigned freq,TM_DONE_CB cb)
 	gTimerEvent=TRUE;
 	tm_tc_start(AT91C_ID_TC1, tm_isr, 
 			AT91C_AIC_SRCTYPE_INT_HIGH_LEVEL| AT91C_AIC_PRIOR_HIGHEST,
-			AT91C_TC_CLKS_TIMER_DIV1_CLOCK,MCK/2/freq);
+			AT91C_TC_CLKS_TIMER_DIV1_CLOCK,USPI_MCK/2/freq);
 }
 
 void tm_stop()

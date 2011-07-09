@@ -7,7 +7,15 @@
 
 
 //CLOCK
-#define MCK						47923200 /* Main CLK frequency */
+#define USPI_CRYSTAL_FREQUENCY				18432000
+#define USPI_PLL_DIV					24
+#define USPI_PLL_MUL					125
+#define USPI_PLL_COUNT					16
+#define USPI_PLL_USBDIV					2
+#define USPI_PLL_CLK					(USPI_CRYSTAL_FREQUENCY/USPI_PLL_DIV*USPI_PLL_MUL)
+#define USPI_MCK_PRES					2
+#define USPI_MCK					(USPI_PLL_CLK/USPI_MCK_PRES)
+
 
 //TIMER
 #define RTT_FREQ				10		/* MIPS measurement  frequency */
@@ -70,7 +78,6 @@
 //               <3=> Clock / 8    <4=> Clock / 16
 //               <5=> Clock / 32   <6=> Clock / 64
 //               <7=> Reserved
-#define PMC_PLLR_Val	0x10191C05
 #define PMC_MCKR_Val	0x00000007
 #define PMC_MOR_Val		0x00000601
 

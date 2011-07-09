@@ -2,6 +2,9 @@
 #define _USPI_H_
 #include "stdio.h"
 
+#define USPI_NUM_CHANNELS 3
+#define USPI_BYTES_PER_SAMPLE 3
+
 /*******************************************************************************************
 ******************************   TYPES     *************************************************
 ********************************************************************************************/
@@ -17,7 +20,7 @@ struct uspi_stat {
 
 struct uspi_sample {
 	unsigned int time;
-	unsigned char data[3][3];
+	unsigned char data[USPI_NUM_CHANNELS][USPI_BYTES_PER_SAMPLE];
 } __attribute__((__packed__));
 
 /*******************************************************************************************
