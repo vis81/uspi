@@ -107,4 +107,28 @@ int uspi_getstat(uspi_handle* dev, struct uspi_stat* stat);
 
 int uspi_read(uspi_handle* uspi, struct uspi_sample *samples, unsigned count);
 
+
+
+
+int uspi_i2c_write(
+	uspi_handle* uspi,
+	unsigned char dadr,
+	unsigned char iadr,
+	unsigned char data
+	);
+
+int uspi_i2c_read(
+	uspi_handle* uspi,
+	unsigned char dadr,
+	unsigned char iadr,
+	unsigned char *data
+	);
+
+int uspi_i2c_setspeed(
+	uspi_handle* uspi,
+	unsigned int speed
+	);
+
+
+
 #endif

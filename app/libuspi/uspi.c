@@ -287,3 +287,45 @@ int uspi_setspi(uspi_handle* uspi,
     params.scbr=SCBR;
     return usb_control_msg(uspi->dev, USB_TYPE_VENDOR, CMD_SETSPI, 0, 0, (char*) &params, sizeof(params), USB_TIMEOUT);
 }
+
+int uspi_i2c_write(
+	uspi_handle* uspi,
+	unsigned char dadr,
+	unsigned char iadr,
+	unsigned char data
+	)
+{
+    struct cmd_i2c_out out;
+    int ret;
+    ret = usb_control_msg(uspi->dev, USB_TYPE_VENDOR|0x80, CMD_I2C, data | 0x100, (iadr<<8) | dadr, (char*) &out, 2, USB_TIMEOUT);
+    if (ret!=2)
+		return ret;
+    else
+		return out.err;
+}
+
+int uspi_i2c_read(
+	uspi_handle* uspi,
+	unsigned char dadr,
+	unsigned char iadr,
+	unsigned char *data
+	)
+{
+    struct cmd_i2c_out out;
+    int ret;
+    ret = usb_control_msg(uspi->dev, USB_TYPE_VENDOR|0x80, CMD_I2C, 0, (iadr<<8) | dadr, (char*) &out, 2, USB_TIMEOUT);
+    if (ret!=2)
+		return ret;
+    *data=out.data;
+    return out.err;
+}
+
+int uspi_i2c_setspeed(
+	uspi_handle* uspi,
+	unsigned int speed
+	)
+{
+    int ret;
+    ret = usb_control_msg(uspi->dev, USB_TYPE_VENDOR, CMD_I2C_SPEED, 0, 0, (char*) &speed, 4, USB_TIMEOUT);
+    return ret;
+}
