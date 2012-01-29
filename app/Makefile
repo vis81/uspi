@@ -1,5 +1,5 @@
 PROG = apps
-TRGTS = uspi_conv uspi_check libuspi uspi_test labview
+TRGTS = uspi_conv uspi_check libuspi uspi_test uspi_i2c labview
 
 $(PROG): $(TRGTS)
 
