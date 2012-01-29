@@ -49,7 +49,7 @@ OBJDIR=$(TARGET)_obj
 
 # Objects built from C source files
 C_OBJECTS = adc.o chanmgr.o cmd.o intc.o board.o
-C_OBJECTS += main.o pio.o spi.o time.o usb.o
+C_OBJECTS += main.o pio.o spi.o time.o usb.o twi.o
 
 # Objects built from Assembly source files
 ASM_OBJECTS = start.o

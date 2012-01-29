@@ -11,6 +11,7 @@
 #include "pio.h"
 #include "adc.h"
 #include "intc.h"
+#include "twi.h"
 
 
 const USB_DEVICE_DESCRIPTOR UsbDevDesc={
@@ -107,6 +108,8 @@ int main (void) {
   			(const USB_CONFIGURATION_DESCRIPTOR*)&UsbCfgDesc,
   			(const USB_STRING_DESCRIPTOR**)strings,
   			cmd_dispatch);
+
+  twi_init();
 
   idle=0;
   

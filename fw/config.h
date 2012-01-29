@@ -25,7 +25,7 @@
 #define PID						0x0007
 #define MANUFACTURER 			L"Tomek"
 #define PRODUCT 				L"Uspi"
-#define VERSION					L"Test_13_XX"
+#define VERSION					L"2.0"
 
 //USB
 #define USB_EP_NUM				2
@@ -49,6 +49,9 @@
 #define SPI_FIQ					TRUE
 #define	SPI_INIT_LB				FALSE
 #define SPI_INIT_SCBR			4
+
+//TWI
+#define USPI_TWI_CLK_HZ			100000
 
 //PMC
 //   <h> Main Oscillator

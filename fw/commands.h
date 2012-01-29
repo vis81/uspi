@@ -42,7 +42,16 @@ struct cmd_setspi_in {
 	unsigned char scbr;
 };
 
+/* I2C*/
+#define	CMD_I2C			0x05
 
-#define	NUM_CMDS		0x05
+struct cmd_i2c_out {
+	unsigned char	err;
+	unsigned char	data;	
+};
+
+#define	CMD_I2C_SPEED		0x06
+
+#define	NUM_CMDS		0x07
 
 #endif
